@@ -1,0 +1,22 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.App {
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #ededed;
+}
+
+input {
+  padding-left: 0.5rem;
+  width: 100px;
+}
+
+.container + .container {
+  margin-top: 2rem;
+}

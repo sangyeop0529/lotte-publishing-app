@@ -1,0 +1,22 @@
+.CalculateVw {
+}
+.CalculateVw .title {
+  margin-bottom: 0.5rem;
+}
+.CalculateVw .flex-box {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.CalculateVw .btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: rgb(76, 175, 80);
+  color: rgb(255, 255, 255);
+  border: none;
+  height: 100%;
+  border-radius: 4px;
+  cursor: pointer;
+}
