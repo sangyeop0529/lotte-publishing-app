@@ -16,22 +16,31 @@
 
 .CalculateTop .flex-box {
   display: flex;
-  align-items: center;
-  height: 2rem;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 0.5rem;
 }
-.CalculateTop .flex-box > .flex-box {
+.CalculateTop .flex-box .value-box {
+  display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 .CalculateTop .top-value {
   display: flex;
-  height: 100%;
+  height: 2rem;
+}
+.CalculateTop label.top-value {
+  gap: 0.25rem;
+}
+.CalculateTop .top-value .num {
+  min-width: 25px;
 }
 .CalculateTop .btn-box {
   display: flex;
-  height: 100%;
+  height: 2rem;
   gap: 0.25rem;
+  flex-shrink: 0;
 }
 .CalculateTop input {
   height: 100%;

@@ -31,6 +31,12 @@ const CalculateTop = () => {
 
     setPercents(newPercents);
   };
+
+  const onKeyDownInput = (e) => {
+    if (e.key === "Enter") {
+      handleCalculatePercent();
+    }
+  };
   return (
     <div className="CalculateTop">
       <label className="img-height">
@@ -39,11 +45,15 @@ const CalculateTop = () => {
       </label>
 
       <div className="flex-box">
-        <div className="flex-box">
+        <div className="value-box">
           {tops.map((top, index) => (
             <label className="top-value" key={index}>
-              <span>#{index + 1}</span>
-              <input type="text" onChange={(e) => onChangeTop(index, e)} />
+              <span className="num">#{index + 1}</span>
+              <input
+                type="text"
+                onKeyDown={onKeyDownInput}
+                onChange={(e) => onChangeTop(index, e)}
+              />
             </label>
           ))}
         </div>
