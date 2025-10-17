@@ -10,6 +10,7 @@
   margin: 0 auto;
   padding: 2rem;
   background-color: #ededed;
+  border-radius: 0.25rem;
 }
 
 input {
