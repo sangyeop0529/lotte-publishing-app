@@ -16,21 +16,18 @@ const TestLink = () => {
       }
       const snmCode = match[1];
       const queryPart = url.split("?")[1] ? url.split("?")[1] : "";
-
-      // 공통 쿼리 문자열 구성
       const baseQuery = queryPart
         ? `?shpgNewsNo=${snmCode}&${queryPart}`
         : `?shpgNewsNo=${snmCode}`;
 
-      // 각각의 버전 URL
-      const mobUrl = `https://m.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}`;
-      const pcUrl = `https://www.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}`;
-      const kioskUrl = `https://m.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}&ch=k`;
+      const urls = [
+        `https://m.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}`,
+        `https://www.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}`,
+        `https://m.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}&ch=k`,
+      ];
 
-      // 순차적으로 0.3초 간격으로 열기
-      window.open(mobUrl, "_blank");
-      setTimeout(() => window.open(pcUrl, "_blank"), 300);
-      setTimeout(() => window.open(kioskUrl, "_blank"), 600);
+      // 클릭 이벤트에서 동시에 열기
+      urls.forEach((u) => window.open(u, "_blank"));
     } catch (e) {
       alert("URL 변환 중 오류가 발생했습니다.");
       console.error(e);
