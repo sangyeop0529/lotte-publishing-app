@@ -7,41 +7,56 @@ const TestLink = () => {
     setUrl(e.target.value);
   };
 
+  // 공통: URL 생성
+  const getUrls = (type = "all") => {
+    const match = url.match(/\/gate\/(SNM\d+)\//);
+    if (!match) throw new Error("올바른 URL 형식이 아닙니다.");
+    const snmCode = match[1];
+    const queryPart = url.split("?")[1] ? url.split("?")[1] : "";
+    const baseQuery = queryPart
+      ? `?shpgNewsNo=${snmCode}&${queryPart}`
+      : `?shpgNewsNo=${snmCode}`;
+
+    const urls = {
+      mob: `https://m.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}`,
+      pc: `https://www.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}`,
+      kiosk: `https://m.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}&ch=k`,
+    };
+
+    if (type === "all") return Object.values(urls);
+    return type in urls ? [urls[type]] : [];
+  };
+
+  // 공통: 열기
+  const openUrls = (urls) => {
+    const windows = urls.map((u) => window.open(u, "_blank"));
+    windows.forEach((win, idx) => {
+      if (!win) console.warn(`팝업 차단됨: ${urls[idx]}`);
+    });
+  };
+
+  // 버튼용 핸들러
   const handleOpenUrl = () => {
     try {
-      const match = url.match(/\/gate\/(SNM\d+)\//);
-      if (!match) {
-        alert("올바른 URL 형식이 아닙니다.");
-        return;
-      }
-      const snmCode = match[1];
-      const queryPart = url.split("?")[1] ? url.split("?")[1] : "";
-      const baseQuery = queryPart
-        ? `?shpgNewsNo=${snmCode}&${queryPart}`
-        : `?shpgNewsNo=${snmCode}`;
-
-      const urls = [
-        `https://m.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}`, // 모바일
-        `https://www.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}`, // PC
-        `https://m.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}&ch=k`, // 키오스크
-      ];
-
-      // 모든 창을 클릭 이벤트 안에서 바로 열기
-      const windows = urls.map((u) => window.open(u, "_blank"));
-
-      // 필요 시 새 창이 열렸는지 확인 가능
-      windows.forEach((win, idx) => {
-        if (!win) console.warn(`팝업 차단됨: ${urls[idx]}`);
-      });
+      openUrls(getUrls("all"));
     } catch (e) {
-      alert("URL 변환 중 오류가 발생했습니다.");
+      alert(e.message);
+      console.error(e);
+    }
+  };
+
+  const handleOpenUrlOnlyMob = () => {
+    try {
+      openUrls(getUrls("mob"));
+    } catch (e) {
+      alert(e.message);
       console.error(e);
     }
   };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      handleOpenUrl();
+      handleOpenUrlOnlyMob();
     }
   };
   return (
@@ -53,7 +68,10 @@ const TestLink = () => {
         value={url}
       />
 
-      <button onClick={handleOpenUrl}>Mob/Pc/Kiosk 열기</button>
+      <div className="btn-group">
+        <button onClick={handleOpenUrlOnlyMob}>Mobile만 열기</button>
+        <button onClick={handleOpenUrl}>모두 열기</button>
+      </div>
     </div>
   );
 };
