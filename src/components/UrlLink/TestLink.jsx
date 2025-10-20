@@ -21,13 +21,18 @@ const TestLink = () => {
         : `?shpgNewsNo=${snmCode}`;
 
       const urls = [
-        `https://m.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}`,
-        `https://www.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}`,
-        `https://m.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}&ch=k`,
+        `https://m.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}`, // 모바일
+        `https://www.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}`, // PC
+        `https://m.lotteshopping.com/shpgnews/shpgnewsDetail${baseQuery}&ch=k`, // 키오스크
       ];
 
-      // 클릭 이벤트에서 동시에 열기
-      urls.forEach((u) => window.open(u, "_blank"));
+      // 모든 창을 클릭 이벤트 안에서 바로 열기
+      const windows = urls.map((u) => window.open(u, "_blank"));
+
+      // 필요 시 새 창이 열렸는지 확인 가능
+      windows.forEach((win, idx) => {
+        if (!win) console.warn(`팝업 차단됨: ${urls[idx]}`);
+      });
     } catch (e) {
       alert("URL 변환 중 오류가 발생했습니다.");
       console.error(e);
