@@ -15,7 +15,6 @@ const CalculateVw = ({ tit, clamp }) => {
       alert("값을 입력하세요.");
       return;
     }
-
     navigator.clipboard
       .writeText(valueToShow.toString())
       .then(() => {

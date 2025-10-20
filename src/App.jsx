@@ -1,4 +1,5 @@
 import Calculate from "./components/Calculate";
+import SampleCode from "./components/SampleCode";
 import UrlLink from "./components/UrlLink";
 
 function App() {
@@ -7,6 +8,8 @@ function App() {
       <Calculate />
       <br />
       <UrlLink />
+      <br />
+      <SampleCode />
     </div>
   );
 }
