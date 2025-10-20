@@ -1,7 +1,7 @@
 import CalculateVw from "./CalculateVw";
-import "./Calculate.css";
-import ContentsTitle from "./ContentsTitle";
+import ContentsTitle from "../ContentsTitle";
 import CalculateTop from "./CalculateTop";
+import "./index.css";
 
 const descriptionText = [
   `
