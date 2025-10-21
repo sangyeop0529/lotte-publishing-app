@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./index.css";
+import ContentsTitle from "../ContentsTitle";
 
 const CalculateTop = () => {
   const [height, setHeight] = useState(0);
@@ -39,44 +40,50 @@ const CalculateTop = () => {
   };
   return (
     <div className="CalculateTop">
-      <label className="img-height">
-        <input type="text" onChange={onChangeHeight} />
-        (이미지 높이값)
-      </label>
+      <div className="container">
+        <ContentsTitle
+          title={"Top 위치값 % 전환"}
+          description={"공식 : 이미지 Top / 배경 height * 100"}
+        />
+        <label className="img-height">
+          <input type="text" onChange={onChangeHeight} />
+          (이미지 높이값)
+        </label>
 
-      <div className="flex-box">
-        <div className="value-box">
+        <div className="flex-box">
+          <div className="value-box">
+            {tops.map((top, index) => (
+              <label className="top-value" key={index}>
+                <span className="num">#{index + 1}</span>
+                <input
+                  type="text"
+                  onKeyDown={onKeyDownInput}
+                  onChange={(e) => onChangeTop(index, e)}
+                />
+              </label>
+            ))}
+          </div>
+
+          <div className="btn-box">
+            <button className="btn" onClick={handleClone}>
+              +
+            </button>
+            <button className="btn" onClick={handleCalculatePercent}>
+              계산
+            </button>
+          </div>
+        </div>
+
+        <h3 className="result__text">결과값</h3>
+        <div className="list__warp">
           {tops.map((top, index) => (
-            <label className="top-value" key={index}>
-              <span className="num">#{index + 1}</span>
-              <input
-                type="text"
-                onKeyDown={onKeyDownInput}
-                onChange={(e) => onChangeTop(index, e)}
-              />
-            </label>
+            <p key={index}>
+              {top && percents[index] !== undefined
+                ? `${index + 1}번 : ${percents[index]}%`
+                : ""}
+            </p>
           ))}
         </div>
-
-        <div className="btn-box">
-          <button className="btn" onClick={handleClone}>
-            +
-          </button>
-          <button className="btn" onClick={handleCalculatePercent}>
-            계산
-          </button>
-        </div>
-      </div>
-
-      <h3 className="result__text">결과값</h3>
-      <div className="list__warp">
-        {tops.map((top, index) => (
-          <p key={index}>
-            {top && percents[index] !== undefined
-              ? `${index + 1}번 : ${percents[index]}%`
-              : ""}
-          </p>
-        ))}
       </div>
     </div>
   );
