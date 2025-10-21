@@ -24,7 +24,10 @@ input {
 .container + .container {
   margin-top: 1rem;
 }
-
+.tab-menu {
+  white-space: nowrap;
+  overflow-x: auto;
+}
 .tab-menu button {
   padding: 0.5rem 1rem;
   border: 1px solid #ccc;
