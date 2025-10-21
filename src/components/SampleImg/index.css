@@ -1,0 +1,31 @@
+.SampleImg .flex-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.SampleImg .img-area {
+  background-color: #fff;
+  padding: 0.25rem 1.25rem;
+  min-height: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.SampleImg .btn-group {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+.SampleImg button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: rgb(76, 175, 223);
+  color: rgb(255, 255, 255);
+  border: none;
+  height: 100%;
+  border-radius: 4px;
+  cursor: pointer;
+}

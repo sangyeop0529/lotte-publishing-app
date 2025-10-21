@@ -17,8 +17,8 @@ const Calculate = () => {
       <div className="container">
         <ContentsTitle title={"Px to Vw "} description={descriptionText[0]} />
         <div className="vw-box">
-          <CalculateVw tit={"normal"} />
           <CalculateVw tit={"clamp"} clamp />
+          <CalculateVw tit={"normal"} />
         </div>
       </div>
 

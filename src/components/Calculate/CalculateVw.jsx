@@ -19,6 +19,7 @@ const CalculateVw = ({ tit, clamp }) => {
       .writeText(valueToShow.toString())
       .then(() => {
         alert(`복사됨 : ${valueToShow}`);
+        setInput("");
       })
       .catch((err) => {
         console.error("클립보드 복사 실패:", err);
@@ -28,6 +29,7 @@ const CalculateVw = ({ tit, clamp }) => {
   const onKeyDownInput = (e) => {
     if (e.key === "Enter") {
       onClickCopy();
+      setInput("");
     }
   };
 
@@ -39,6 +41,7 @@ const CalculateVw = ({ tit, clamp }) => {
           onChange={onChangeInput}
           onKeyDown={onKeyDownInput}
           type="text"
+          value={input}
         />
         <button className="btn" onClick={() => onClickCopy(valueToShow)}>
           {input ? valueToShow : "값 입력"}

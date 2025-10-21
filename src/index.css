@@ -5,6 +5,9 @@
 }
 
 .App {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   max-width: 1000px;
   width: 100%;
   margin: 0 auto;
@@ -19,5 +22,5 @@ input {
 }
 
 .container + .container {
-  margin-top: 2rem;
+  margin-top: 1rem;
 }

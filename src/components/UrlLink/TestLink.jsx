@@ -69,8 +69,8 @@ const TestLink = () => {
       />
 
       <div className="btn-group">
-        <button onClick={handleOpenUrlOnlyMob}>Mobile만 열기</button>
         <button onClick={handleOpenUrl}>모두 열기</button>
+        <button onClick={handleOpenUrlOnlyMob}>Mobile만 열기</button>
       </div>
     </div>
   );

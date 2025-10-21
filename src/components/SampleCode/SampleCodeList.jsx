@@ -58,7 +58,7 @@ function SampleCodeList() {
                     <button
                       style={{
                         color: "#fff",
-                        backgroundColor: "rgb(76, 175, 80)",
+                        backgroundColor: "rgb(76, 175, 223)",
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
