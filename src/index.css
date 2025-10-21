@@ -24,3 +24,22 @@ input {
 .container + .container {
   margin-top: 1rem;
 }
+
+.tab-menu button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  background: #fff;
+  cursor: pointer;
+  border-radius: 4px 4px 0 0;
+}
+.tab-menu button.active {
+  background-color: rgb(76, 175, 223);
+  border-color: rgb(76, 175, 223);
+  color: #fff;
+}
+
+.App .tab-content {
+  background-color: #fff;
+  padding: 1rem;
+}

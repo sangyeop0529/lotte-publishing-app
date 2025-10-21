@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./CalculateTop.css";
+import "./index.css";
 
 const CalculateTop = () => {
   const [height, setHeight] = useState(0);
@@ -68,6 +68,7 @@ const CalculateTop = () => {
         </div>
       </div>
 
+      <h3 className="result__text">결과값</h3>
       <div className="list__warp">
         {tops.map((top, index) => (
           <p key={index}>

@@ -1,6 +1,6 @@
 import CalculateVw from "./CalculateVw";
 import ContentsTitle from "../ContentsTitle";
-import CalculateTop from "./CalculateTop";
+import CalculateTop from "../CalPosition";
 import "./index.css";
 
 const descriptionText = [
@@ -19,13 +19,6 @@ const Calculate = () => {
         <div className="vw-box">
           <CalculateVw tit={"clamp"} clamp />
           <CalculateVw tit={"normal"} />
-        </div>
-      </div>
-
-      <div className="container">
-        <ContentsTitle title={"Top percent"} description={descriptionText[1]} />
-        <div className="top-percent-box">
-          <CalculateTop />
         </div>
       </div>
     </div>

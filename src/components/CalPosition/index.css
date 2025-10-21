@@ -57,10 +57,12 @@
   border-radius: 4px;
   cursor: pointer;
 }
-
+.CalculateTop .result__text {
+  font-size: 16px;
+  margin: 0.5rem 0;
+}
 .CalculateTop .list__warp {
-  margin-top: 1rem;
-  background-color: #fff;
+  background-color: #eee;
   border-radius: 0.25rem;
   padding: 0.5rem;
 }
