@@ -2,10 +2,26 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/prism";
 import codeGroups from "../../data/codeGroups";
 import "./SampleCodeList.css";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
-function SampleCodeList() {
+function SampleCodeList({ searchTerm }) {
   const [openIndexes, setOpenIndexes] = useState({});
+
+  const filteredGroups = useMemo(() => {
+    if (!searchTerm.trim()) return codeGroups;
+    const term = searchTerm.toLowerCase();
+    return codeGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter(
+          (item) =>
+            item.language.toLowerCase().includes(term) ||
+            (item.subName && item.subName.toLowerCase().includes(term)) ||
+            item.code.toLowerCase().includes(term)
+        ),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [searchTerm]);
 
   const handleCopyCode = (code) => {
     if (code && code.trim() !== "") {
@@ -29,7 +45,7 @@ function SampleCodeList() {
 
   return (
     <div className="SampleCodeList">
-      {codeGroups.map((group, gIndex) => (
+      {filteredGroups.map((group, gIndex) => (
         <div key={gIndex} className="code-group">
           {group.name && <h2 className="title">{group.name}</h2>}
           {group.items.map((item, iIndex) => {
