@@ -8,7 +8,7 @@ const CalculateVw = ({ tit, clamp }) => {
   };
   const calculate = parseFloat(((input / 750) * 100).toFixed(4));
   const calculateVw = `${calculate}vw`;
-  const calculateClamp = `clamp(30px, ${calculate}vw, 60px)`;
+  const calculateClamp = `clamp(${input / 2}px, ${calculate}vw, ${input}px)`;
   const valueToShow = clamp ? calculateClamp : calculateVw;
   const onClickCopy = () => {
     if (!input) {

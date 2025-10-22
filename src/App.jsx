@@ -5,6 +5,7 @@ import FileDownload from "./components/FileDownload";
 import SampleCode from "./components/SampleCode";
 import SampleImg from "./components/SampleImg";
 import UrlLink from "./components/UrlLink";
+import Eclipse from "./components/Eclipse";
 
 const tabs = [
   { key: "calculate", label: "Vw 계산기", component: <Calculate /> },
@@ -12,6 +13,7 @@ const tabs = [
   { key: "url", label: "URL 링크", component: <UrlLink /> },
   { key: "img", label: "샘플 이미지", component: <SampleImg /> },
   { key: "file", label: "파일 다운로드", component: <FileDownload /> },
+  // { key: "eclipse", label: "이클립스", component: <Eclipse /> },
 ];
 
 function App() {
