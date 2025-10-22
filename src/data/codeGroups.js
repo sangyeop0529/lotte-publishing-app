@@ -26,6 +26,36 @@ const codeGroups = [
     ],
   },
   {
+    name: "floating Btn",
+    items: [
+      {
+        language: "html",
+        code: `<div class="img-box">
+  <img src="./images/" alt="" />
+  <span class="goto-link kioskDel">
+    <a href="#" id="link0" data-order="0" class="link-btn">
+      <img src="./images/" alt="" />
+    </a>
+  </span>
+</div>`,
+      },
+      {
+        language: "css",
+        code: `.goto-link {
+  position: absolute;
+  width: clamp(275px, 73.3333vw, 550px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 255, 0.7);
+}
+.goto-link:nth-of-type(1) {
+  bottom: 10%;
+}
+`,
+      },
+    ],
+  },
+  {
     name: "Swiper 기본형",
     items: [
       {
