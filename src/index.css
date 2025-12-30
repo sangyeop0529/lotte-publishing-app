@@ -26,7 +26,8 @@ input {
 }
 .tab-menu {
   white-space: nowrap;
-  overflow-x: auto;
+  /* overflow-x: auto; */
+  perspective: 600px;
 }
 .tab-menu button {
   padding: 0.5rem 1rem;
@@ -40,6 +41,47 @@ input {
   background-color: rgb(76, 175, 223);
   border-color: rgb(76, 175, 223);
   color: #fff;
+}
+
+.tab-menu .new {
+  position: relative;
+}
+
+.tab-menu .new::before {
+  content: "NEW";
+  position: absolute;
+  top: -10px;
+  left: -6px;
+
+  padding: 2px 8px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+
+  color: #fff;
+  background: linear-gradient(135deg, #ff6a6a, #ff3d81);
+  border-radius: 9999px;
+
+  box-shadow: 0 4px 10px rgba(255, 61, 129, 0.35);
+
+  transform: translateY(0);
+  animation: newBadgePulse 1.8s ease-in-out infinite;
+}
+
+/* 과하지 않은 강조 애니메이션 */
+@keyframes newBadgePulse {
+  0% {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
 }
 
 .App .tab-content {
