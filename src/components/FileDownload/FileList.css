@@ -1,0 +1,20 @@
+.FileList {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(76, 175, 223);
+  color: rgb(255, 255, 255);
+  border: none;
+  border-radius: 4px;
+}
+.FileList a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: rgb(255, 255, 255);
+  text-decoration: none;
+  padding: 0.5rem 0.75rem;
+  font-size: 14px;
+  text-align: center;
+  white-space: pre-line;
+}

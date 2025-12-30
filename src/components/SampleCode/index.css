@@ -1,0 +1,25 @@
+.SampleCode .flex-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.SampleCode .code-search {
+  display: flex;
+  gap: 0.5rem;
+}
+.SampleCode .code-search input {
+  display: block;
+  flex: 1;
+  width: 100%;
+}
+.SampleCode .code-search button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: rgb(255, 255, 255);
+  background-color: rgb(76, 175, 223);
+}

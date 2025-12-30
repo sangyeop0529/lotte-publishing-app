@@ -1,0 +1,52 @@
+.SampleCodeList {
+}
+.SampleCodeList .code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #2d2d2d;
+  color: #ccc;
+  font-size: 12px;
+  padding: 6px 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+.SampleCodeList .code-header .code-btns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+.SampleCodeList .code-header button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(225, 225, 225);
+  border: none;
+  padding: 4px 8px;
+  color: rgb(17, 17, 17);
+  cursor: pointer;
+}
+
+.SampleCodeList .code-group + .code-group {
+  margin-top: 0.5rem;
+}
+
+.SampleCodeList .code-content + .code-content {
+  margin-top: 0.5rem;
+}
+.SampleCodeList .subName {
+  margin-left: 0.25rem;
+}
+.SampleCodeList .title {
+  font-weight: 500;
+  font-size: 16px;
+  margin-bottom: 0.5rem;
+  color: #838383;
+}
+
+.SampleCodeList pre {
+  margin: 0 !important;
+  background: #1e1e1e !important;
+  font-size: 14px !important;
+}
