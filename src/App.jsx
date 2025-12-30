@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Calculate from "./components/Calculate";
 import Calposition from "./components/CalPosition";
 import FileDownload from "./components/FileDownload";
@@ -20,11 +20,33 @@ function App() {
   const [activeTab, setActiveTab] = useState("calculate");
   const activeTabContent = tabs.find((tab) => tab.key === activeTab)?.component;
 
+  const tabMenuRef = useRef(null);
+  const [isScrollable, setIsScrollable] = useState(false);
+
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (!tabMenuRef.current) return;
+
+      const menuWidth = tabMenuRef.current.scrollWidth;
+      const viewportWidth = window.innerWidth;
+
+      setIsScrollable(menuWidth > viewportWidth);
+    };
+
+    checkOverflow();
+    window.addEventListener("resize", checkOverflow);
+
+    return () => window.removeEventListener("resize", checkOverflow);
+  }, []);
+
   return (
     <div className="App">
       <div className="">
         {/* 상단 탭 영역 */}
-        <div className="tab-menu">
+        <div
+          ref={tabMenuRef}
+          className={`tab-menu ${isScrollable ? "is-scroll" : ""}`}
+        >
           {tabs.map((tab) => (
             <button
               key={tab.key}
