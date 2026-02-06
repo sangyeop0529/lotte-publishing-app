@@ -12,8 +12,8 @@ const tabs = [
   { key: "calculate", label: "Vw 계산기", component: <Calculate /> },
   { key: "position", label: "Top 위치값", component: <Calposition /> },
   { key: "url", label: "URL 링크", component: <UrlLink /> },
-  { key: "xbrowser", label: "앱 분기처리", component: <Xbrowser /> },
-  { key: "class", label: "스와이퍼 JS", new: true, component: <ClassJs /> },
+  { key: "xbrowser", label: "앱 분기처리", new: true, component: <Xbrowser /> },
+  { key: "class", label: "스와이퍼 JS", component: <ClassJs /> },
   { key: "img", label: "샘플 이미지", component: <SampleImg /> },
   { key: "file", label: "파일 다운로드", component: <FileDownload /> },
 ];
