@@ -6,12 +6,14 @@ import SampleCode from "./components/SampleCode";
 import SampleImg from "./components/SampleImg";
 import UrlLink from "./components/UrlLink";
 import ClassJs from "./components/ClassJs";
+import Xbrowser from "./components/Xbrowser";
 
 const tabs = [
   { key: "calculate", label: "Vw 계산기", component: <Calculate /> },
   { key: "position", label: "Top 위치값", component: <Calposition /> },
   { key: "url", label: "URL 링크", component: <UrlLink /> },
-  { key: "class", label: "스와이퍼 JS", new: true, component: <ClassJs /> }, // code 추가
+  { key: "xbrowser", label: "앱 분기처리", component: <Xbrowser /> },
+  { key: "class", label: "스와이퍼 JS", new: true, component: <ClassJs /> },
   { key: "img", label: "샘플 이미지", component: <SampleImg /> },
   { key: "file", label: "파일 다운로드", component: <FileDownload /> },
 ];
