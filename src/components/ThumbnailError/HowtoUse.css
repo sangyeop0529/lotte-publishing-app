@@ -1,0 +1,12 @@
+.howToUse li {
+  list-style: none;
+}
+.howToUse .order-list {
+  background-color: #eee;
+  border-radius: 0.25rem;
+  padding: 1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: #838383;
+}
