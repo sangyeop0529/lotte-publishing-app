@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import Calculate from "./components/Calculate";
 import Calposition from "./components/CalPosition";
-import FileDownload from "./components/FileDownload";
 import SampleCode from "./components/SampleCode";
 import UrlLink from "./components/UrlLink";
 import ClassJs from "./components/ClassJs";
 import Timer from "./components/Timer";
-import ThumbnailError from "./components/ThumbnailError";
 
 const tabs = [
   { key: "calculate", label: "Vw 계산기", component: <Calculate /> },
@@ -15,13 +13,13 @@ const tabs = [
   // { key: "xbrowser", label: "앱 분기처리", new: true, component: <Xbrowser /> },
   { key: "timer", label: "타이머", new: true, component: <Timer /> },
   { key: "class", label: "스와이퍼 JS", component: <ClassJs /> },
-  {
-    key: "thumbnailError",
-    label: "썸네일 에러",
-    component: <ThumbnailError />,
-  },
+  // {
+  //   key: "thumbnailError",
+  //   label: "썸네일 에러",
+  //   component: <ThumbnailError />,
+  // },
   // { key: "img", label: "샘플 이미지", component: <SampleImg /> },
-  { key: "file", label: "파일 다운로드", component: <FileDownload /> },
+  // { key: "file", label: "파일 다운로드", component: <FileDownload /> },
 ];
 
 function App() {
