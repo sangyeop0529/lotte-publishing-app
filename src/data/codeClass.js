@@ -10,7 +10,7 @@ const codeClass = [
       {
         language: "javascript",
         type: "javascript",
-        code: `new ClassSwiper(".flow", {
+        code: `new ClassSwiper(".basic", {
   slides: 5, // 스와이퍼 이미지 갯수
   imgPath: "./images/slide/1/", // 이미지 경로
   swiperOptions: {
@@ -37,7 +37,8 @@ swiperEls.forEach((swiperEl) => {
     slides: swiperEl.slides,
     imgPath: swiperEl.imgPath,
     swiperOptions: {
-      spaceRatio: 0.08, // spaceBetween
+      slidesPerView: 1.1,
+      spaceRatio: 0.06667, // spaceBetween
       pagination: true,
       // navigation: true,
       // scrollbar: true
