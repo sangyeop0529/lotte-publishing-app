@@ -29,6 +29,7 @@ const Calculate = () => {
         <div className="vw-box">
           <CalculateVw tit={"normal"} notify={notify} />
           <CalculateVw tit={"clamp"} clamp notify={notify} />
+          <CalculateVw tit={"min"} min notify={notify} />
         </div>
       </section>
 

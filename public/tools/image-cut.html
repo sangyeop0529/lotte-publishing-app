@@ -188,7 +188,7 @@ kbd{font:inherit;font-size:11px;line-height:1.5;padding:0 6px;border-radius:5px;
     <div class="dh"><b id="mTitle"></b><button id="mClose">닫기</button></div>
     <div id="mWarn"></div>
     <div id="mGrid"></div>
-    <div class="df"><span id="mStat" class="mute"></span><div style="display:flex;gap:8px"><button id="mVerify">원본 대조 검증</button><button class="pri" id="mZip">ZIP 저장</button></div></div>
+    <div class="df"><span id="mStat" class="mute"></span><button class="pri" id="mZip">ZIP 저장</button></div>
   </div>
 </div>
 <div id="loupe" hidden><canvas width="200" height="120"></canvas><span></span></div>
@@ -542,7 +542,6 @@ function computeOutputs(){
       }
     }else{img++;list.push({name:'img_'+p2(img),x0:0,x1:S.W,y0,y1,type:'일반'});}
   });
-  if(getExt()==='jpg')warns.push('JPG는 품질 100이어도 원본과 픽셀이 미세하게 달라져요(색 오차 최대 약 4, 눈으로는 구분 어려움). 완전한 원본 유지가 필요하면 PNG를 쓰세요');
   const seen=new Set();
   for(const o of list){if(seen.has(o.name))warns.push('파일명 중복: '+o.name+' (탭 행의 on/off 상태가 같은 구간이 여러 개예요)');seen.add(o.name);}
   return {list,warns:[...new Set(warns)]};
@@ -616,7 +615,7 @@ function renderGrid(){
     it.appendChild(b);it.appendChild(sp);grid.appendChild(it);
     if(!dl&&!o.off){cropBlob(o).then(bl=>{const u=URL.createObjectURL(bl);previewUrls.push(u);const im=document.createElement('img');im.src=u;im.alt=o.name;tb.replaceChildren(im);}).catch(()=>{});}
   });
-  $('#mZip').disabled=!list.length;$('#mVerify').disabled=!list.length;
+  $('#mZip').disabled=!list.length;
 }
 $('#mGrid').addEventListener('click',e=>{
   const x=e.target.closest('.ix');if(!x)return;
@@ -627,28 +626,6 @@ $('#btnPreview').onclick=()=>{
   if(!S.img)return;
   if(!computeOutputs().list.length){toast('내보낼 이미지가 없어요');return;}
   $('#mStat').textContent='';renderGrid();$('#modal').hidden=false;
-};
-$('#mVerify').onclick=async()=>{
-  const btn=$('#mVerify'),stat=$('#mStat'),r=exportList(),excl=r.all.length-r.list.length;btn.disabled=true;
-  try{
-    const oc=document.createElement('canvas');oc.width=S.W;oc.height=S.H;
-    const octx=oc.getContext('2d',{willReadFrequently:true});octx.drawImage(S.img,0,0);
-    let area=0,bad=0,maxd=0;
-    for(let k=0;k<r.list.length;k++){
-      stat.textContent='원본과 비교 중… '+(k+1)+'/'+r.list.length;
-      const o=r.list[k],w=o.x1-o.x0,h=o.y1-o.y0;area+=w*h;
-      const bmp=await createImageBitmap(await cropBlob(o)),c=document.createElement('canvas');c.width=bmp.width;c.height=bmp.height;
-      const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(bmp,0,0);bmp.close&&bmp.close();
-      if(c.width!==w||c.height!==h){bad++;continue;}
-      const a=x.getImageData(0,0,w,h).data,b=octx.getImageData(o.x0,o.y0,w,h).data;let diff=false;
-      for(let i=0;i<a.length;i++){const d=Math.abs(a[i]-b[i]);if(d){diff=true;if(d>maxd)maxd=d;}}
-      if(diff)bad++;
-    }
-    const full=excl>0||area===S.W*S.H;
-    stat.textContent=(bad===0&&full)?(excl?'✓ 검증 완료: 저장할 '+r.list.length+'개 모두 원본과 픽셀 단위로 일치해요 (제외한 '+excl+'개는 비교하지 않음)':'✓ 검증 완료: '+r.list.length+'개 모두 원본과 픽셀 단위로 일치하고, 합치면 원본 전체('+S.W+'×'+S.H+')와 같아요')
-      :'⚠ '+(bad?bad+'개 이미지가 원본과 달라요(최대 오차 '+maxd+'). ':'')+(full?'':'컷팅 영역이 원본 전체와 다릅니다. ')+(getExt()==='jpg'?'JPG 저장 때문일 수 있어요.':'');
-  }catch(err){stat.textContent='검증 실패: '+(err&&err.message?err.message:err);}
-  btn.disabled=false;
 };
 $('#mZip').onclick=async()=>{
   const btn=$('#mZip'),r=exportList(),ext=getExt(),stat=$('#mStat');if(!r.list.length)return;

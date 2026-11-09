@@ -14,27 +14,25 @@
 }
 .CalculateVw .flex-box {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
 }
 .CalculateVw input[type="text"] {
-  flex: 0 0 96px;
+  width: 100%;
 }
 .CalculateVw .btn {
-  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 36px;
   min-width: 0;
   padding: 0 0.875rem;
-  overflow: hidden;
   background-color: var(--c-accent);
   color: #fff;
   border: none;
   border-radius: var(--radius);
   font-weight: 600;
   white-space: nowrap;
-  text-overflow: ellipsis;
   cursor: pointer;
   transition: background-color 0.15s;
 }

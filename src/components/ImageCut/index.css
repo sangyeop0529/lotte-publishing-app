@@ -67,17 +67,3 @@
   border: 0;
 }
 
-/* 저장 후 안내 */
-.image-cut-toast {
-  position: fixed;
-  left: 50%;
-  bottom: 24px;
-  z-index: 1001;
-  transform: translateX(-50%);
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  background-color: #222;
-  color: #fff;
-  font-size: 13px;
-  white-space: nowrap;
-}

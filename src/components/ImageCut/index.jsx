@@ -16,7 +16,6 @@ const tips = [
 const ImageCut = () => {
   const [file, setFile] = useState(null);
   const [isOver, setIsOver] = useState(false);
-  const [toast, setToast] = useState("");
   const inputRef = useRef(null);
   const iframeRef = useRef(null);
   const dirtyRef = useRef(false);
@@ -47,7 +46,7 @@ const ImageCut = () => {
     const onMessage = (e) => {
       if (e.origin !== window.location.origin) return;
       if (e.source !== iframeRef.current?.contentWindow) return;
-      const { type, dirty, filename } = e.data || {};
+      const { type, dirty } = e.data || {};
       if (type === "cut:ready") {
         iframeRef.current.contentWindow.postMessage(
           { type: "cut:load-file", file },
@@ -58,10 +57,9 @@ const ImageCut = () => {
       } else if (type === "cut:exit") {
         close();
       } else if (type === "cut:saved") {
-        // 저장이 끝나면 확인 없이 작업 모드를 닫고 탭 화면으로 돌아갑니다
+        // 저장 후에는 미리보기만 닫히고 작업 화면은 그대로 둡니다.
+        // 저장한 상태이므로 바로 나갈 때는 확인창을 띄우지 않습니다(컷팅선을 다시 고치면 다시 뜸).
         dirtyRef.current = false;
-        setFile(null);
-        setToast(`ZIP 저장을 시작했어요: ${filename}`);
       }
     };
     const onKeyDown = (e) => {
@@ -77,13 +75,6 @@ const ImageCut = () => {
       document.body.style.overflow = prevOverflow;
     };
   }, [file, close]);
-
-  // 저장 안내 토스트 자동 숨김
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(""), 2600);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   // 탭 화면에서 Ctrl+V로 이미지 붙여넣기
   useEffect(() => {
@@ -148,12 +139,6 @@ const ImageCut = () => {
           ))}
         </ul>
       </div>
-
-      {toast && (
-        <p className="image-cut-toast" role="status">
-          {toast}
-        </p>
-      )}
 
       {file && (
         <div

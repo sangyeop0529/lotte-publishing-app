@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./CalculateVw.css";
 
-const CalculateVw = ({ tit, clamp, notify = alert }) => {
+const CalculateVw = ({ tit, clamp, min, notify = alert }) => {
   const [input, setInput] = useState("");
   const onChangeInput = (e) => {
     setInput(e.target.value);
@@ -9,7 +9,13 @@ const CalculateVw = ({ tit, clamp, notify = alert }) => {
   const calculate = parseFloat(((input / 750) * 100).toFixed(4));
   const calculateVw = `${calculate}vw`;
   const calculateClamp = `clamp(${input / 2}px, ${calculate}vw, ${input}px)`;
-  const valueToShow = clamp ? calculateClamp : calculateVw;
+  // min: 화면이 750px보다 넓어져도 원래 px 크기 이상으로 커지지 않음
+  const calculateMin = `min(${calculate}vw, ${input}px)`;
+  const valueToShow = clamp
+    ? calculateClamp
+    : min
+      ? calculateMin
+      : calculateVw;
   const onClickCopy = () => {
     if (!input) {
       notify("값을 입력하세요.");
