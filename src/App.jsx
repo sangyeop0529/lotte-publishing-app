@@ -6,6 +6,7 @@ import ClassJs from "./components/ClassJs";
 import Timer from "./components/Timer";
 import ImageCut from "./components/ImageCut";
 import FileDownload from "./components/FileDownload";
+import Overlay from "./components/Overlay";
 
 const tabs = [
   { key: "sampleCode", label: "Sample Code", component: <SampleCode /> },
@@ -15,7 +16,18 @@ const tabs = [
   { key: "timer", label: "타이머", component: <Timer /> },
   { key: "class", label: "스와이퍼 JS", component: <ClassJs /> },
   { key: "imageCut", label: "이미지 컷팅", new: true, component: <ImageCut /> },
-  { key: "file", label: "템플릿 다운로드", new: true, component: <FileDownload /> },
+  {
+    key: "file",
+    label: "템플릿 다운로드",
+    new: true,
+    component: <FileDownload />,
+  },
+  {
+    key: "overlay",
+    label: "시안 검수(beta)",
+    new: true,
+    component: <Overlay />,
+  },
   // {
   //   key: "thumbnailError",
   //   label: "썸네일 에러",
