@@ -50,7 +50,7 @@
 /* 템플릿 카드 */
 .FileDownload .template-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 0.625rem;
 }
 .FileDownload .template-card {
@@ -64,7 +64,10 @@
   background-color: var(--c-surface);
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s,
+    box-shadow 0.15s;
 }
 .FileDownload .template-card:hover {
   border-color: var(--c-border-strong);
@@ -181,7 +184,9 @@
   border-radius: var(--radius);
   background-color: var(--c-surface);
   overflow: hidden;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 .FileDownload .prefix-input:focus-within {
   border-color: var(--c-accent);
