@@ -2,7 +2,7 @@ import { useState } from "react";
 import "./index.css";
 import ContentsTitle from "../ContentsTitle";
 
-const CalculateTop = () => {
+const CalculateTop = ({ notify = alert }) => {
   const [height, setHeight] = useState(0);
   const [tops, setTops] = useState([""]);
   const [percents, setPercents] = useState([]);
@@ -33,6 +33,13 @@ const CalculateTop = () => {
     setPercents(newPercents);
   };
 
+  const handleCopy = (value) => {
+    navigator.clipboard
+      .writeText(value)
+      .then(() => notify(`복사됨 : ${value}`))
+      .catch((err) => notify("복사 실패: " + err));
+  };
+
   const onKeyDownInput = (e) => {
     if (e.key === "Enter") {
       handleCalculatePercent();
@@ -46,7 +53,11 @@ const CalculateTop = () => {
           description={"공식 : 이미지 Top / 배경 height * 100"}
         />
         <label className="img-height">
-          <input type="text" onChange={onChangeHeight} />
+          <input
+            type="text"
+            onChange={onChangeHeight}
+            onKeyDown={onKeyDownInput}
+          />
           (이미지 높이값)
         </label>
 
@@ -76,13 +87,21 @@ const CalculateTop = () => {
 
         <h3 className="result__text">결과값</h3>
         <div className="list__warp">
-          {tops.map((top, index) => (
-            <p key={index}>
-              {top && percents[index] !== undefined
-                ? `${index + 1}번 : ${percents[index]}%`
-                : ""}
-            </p>
-          ))}
+          {tops.map((top, index) =>
+            top && percents[index] !== undefined ? (
+              <p className="result-item" key={index}>
+                <span className="num">#{index + 1}</span>
+                <strong>{percents[index]}%</strong>
+                <button
+                  type="button"
+                  className="copy-btn"
+                  onClick={() => handleCopy(`${percents[index]}%`)}
+                >
+                  복사
+                </button>
+              </p>
+            ) : null,
+          )}
         </div>
       </div>
     </div>

@@ -147,7 +147,7 @@ kbd{font:inherit;font-size:11px;line-height:1.5;padding:0 6px;border-radius:5px;
     <div class="card list">
       <h3><span>구간 목록</span><span class="mute" id="segCount"></span></h3>
       <div id="segList"></div>
-      <details class="help" open>
+      <details class="help">
         <summary>사용법</summary>
         <div class="hg">
           <div class="hs">컷팅선</div>
@@ -665,14 +665,14 @@ $('#mZip').onclick=async()=>{
     if(!dl){
       const u=URL.createObjectURL(zip),a=document.createElement('a');a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();
       setTimeout(()=>URL.revokeObjectURL(u),15000);
-      closeModal();toast('ZIP 다운로드를 시작했어요: '+filename);return;
+      closeModal();toast('ZIP 다운로드를 시작했어요: '+filename);toParent({type:'cut:saved',filename});return;
     }
-    try{await dl.save({filename,data:zip});closeModal();toast('저장했어요: '+filename);return;}
+    try{await dl.save({filename,data:zip});closeModal();toast('저장했어요: '+filename);toParent({type:'cut:saved',filename});return;}
     catch(err){
       if(err&&/declin|cancel|denied|reject/i.test((err.code||'')+' '+(err.message||''))){stat.textContent='저장이 취소되었어요';}
       else{
         const buf=new Uint8Array(await zip.arrayBuffer());
-        await dl.save({filename,data:buf});closeModal();toast('저장했어요: '+filename);return;
+        await dl.save({filename,data:buf});closeModal();toast('저장했어요: '+filename);toParent({type:'cut:saved',filename});return;
       }
     }
   }catch(err){stat.textContent='저장 실패: '+(err&&err.message?err.message:err);}

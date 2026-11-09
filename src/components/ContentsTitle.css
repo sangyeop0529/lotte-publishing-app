@@ -1,8 +1,16 @@
 .ContentsTitle {
-  margin-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
 }
 .ContentsTitle .title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 .ContentsTitle .description {
-  color: #838383;
+  margin-top: 0.25rem;
+  color: var(--c-text-sub);
+  white-space: pre-line;
+}
+.ContentsTitle .description:empty {
+  display: none;
 }

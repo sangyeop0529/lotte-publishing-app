@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./CalculateVw.css";
 
-const CalculateVw = ({ tit, clamp }) => {
+const CalculateVw = ({ tit, clamp, notify = alert }) => {
   const [input, setInput] = useState("");
   const onChangeInput = (e) => {
     setInput(e.target.value);
@@ -12,18 +12,18 @@ const CalculateVw = ({ tit, clamp }) => {
   const valueToShow = clamp ? calculateClamp : calculateVw;
   const onClickCopy = () => {
     if (!input) {
-      alert("값을 입력하세요.");
+      notify("값을 입력하세요.");
       return;
     }
     navigator.clipboard
       .writeText(valueToShow.toString())
       .then(() => {
-        alert(`복사됨 : ${valueToShow}`);
+        notify(`복사됨 : ${valueToShow}`);
         setInput("");
       })
       .catch((err) => {
         console.error("클립보드 복사 실패:", err);
-        alert("복사 실패: " + err);
+        notify("복사 실패: " + err);
       });
   };
   const onKeyDownInput = (e) => {

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import Calculate from "./components/Calculate";
-import Calposition from "./components/CalPosition";
 import SampleCode from "./components/SampleCode";
 import UrlLink from "./components/UrlLink";
 import ClassJs from "./components/ClassJs";
@@ -8,8 +7,8 @@ import Timer from "./components/Timer";
 import ImageCut from "./components/ImageCut";
 
 const tabs = [
-  { key: "calculate", label: "Vw 계산기", component: <Calculate /> },
-  { key: "position", label: "Top 위치값", component: <Calposition /> },
+  { key: "sampleCode", label: "Sample Code", component: <SampleCode /> },
+  { key: "calculate", label: "계산기", component: <Calculate /> },
   // { key: "url", label: "URL 링크", component: <UrlLink /> },
   // { key: "xbrowser", label: "앱 분기처리", new: true, component: <Xbrowser /> },
   { key: "timer", label: "타이머", component: <Timer /> },
@@ -49,6 +48,11 @@ function App() {
 
   return (
     <div className="App">
+      <header className="app-header">
+        <h1 className="app-title">Publishing Tools</h1>
+        <p className="app-desc">퍼블리싱 작업에 자주 쓰는 도구 모음</p>
+      </header>
+
       <div className="">
         {/* 상단 탭 영역 */}
         <div
@@ -71,9 +75,6 @@ function App() {
         {/* 선택된 탭 내용 */}
         <div className="tab-content">{activeTabContent}</div>
       </div>
-
-      {/* 하단 영역 */}
-      <SampleCode />
     </div>
   );
 }
