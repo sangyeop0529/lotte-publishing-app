@@ -5,14 +5,16 @@ import SampleCode from "./components/SampleCode";
 import UrlLink from "./components/UrlLink";
 import ClassJs from "./components/ClassJs";
 import Timer from "./components/Timer";
+import ImageCut from "./components/ImageCut";
 
 const tabs = [
   { key: "calculate", label: "Vw 계산기", component: <Calculate /> },
   { key: "position", label: "Top 위치값", component: <Calposition /> },
-  { key: "url", label: "URL 링크", component: <UrlLink /> },
+  // { key: "url", label: "URL 링크", component: <UrlLink /> },
   // { key: "xbrowser", label: "앱 분기처리", new: true, component: <Xbrowser /> },
-  { key: "timer", label: "타이머", new: true, component: <Timer /> },
+  { key: "timer", label: "타이머", component: <Timer /> },
   { key: "class", label: "스와이퍼 JS", component: <ClassJs /> },
+  { key: "imageCut", label: "이미지 컷팅", new: true, component: <ImageCut /> },
   // {
   //   key: "thumbnailError",
   //   label: "썸네일 에러",
