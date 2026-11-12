@@ -22,12 +22,12 @@ const tabs = [
     new: true,
     component: <FileDownload />,
   },
-  {
-    key: "overlay",
-    label: "시안 검수(beta)",
-    new: true,
-    component: <Overlay />,
-  },
+  // {
+  //   key: "overlay",
+  //   label: "시안 검수(beta)",
+  //   new: true,
+  //   component: <Overlay />,
+  // },
   // {
   //   key: "thumbnailError",
   //   label: "썸네일 에러",
