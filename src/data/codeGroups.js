@@ -17,7 +17,7 @@ const codeGroups = [
     items: [
       {
         language: "html",
-        code: `<div class="toggle-box on">
+        code: `<div class="toggle-box">
   <div class="toggle-box__btns">
     <img src="./images/toggle.jpg" alt="" />
   </div>
@@ -40,13 +40,14 @@ const codeGroups = [
 }
 /* 수정이 필요한 부분 */
 .toggle-box .toggle-box__btns::before {
-  right: 18.6667vw;
+  right: 12vw;
   width: 2.6667vw;
   height: 1.6vw;
   background: url("../images/t-arrow.png") no-repeat center/contain;
+  transform: translateY(-50%) rotate(180deg);
 }
 .toggle-box.on .toggle-box__btns::before {
-  transform: translateY(-50%) rotate(180deg);
+  transform: translateY(-50%) rotate(0deg);
 }`,
       },
     ],
@@ -56,12 +57,10 @@ const codeGroups = [
     items: [
       {
         language: "html",
-        code: `<div class="img-box">
+        code: `<div class="img-box kioskDel">
   <img src="./images/" alt="" />
-  <span class="goto-link kioskDel">
-    <a href="#" id="link0" data-order="0" class="link-btn">
-      <img src="./images/" alt="" />
-    </a>
+  <span class="goto-link">
+    <a href="#" id="link0" data-order="0" class="link-btn"></a>
   </span>
 </div>`,
       },

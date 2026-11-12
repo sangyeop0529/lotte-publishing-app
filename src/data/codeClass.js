@@ -14,7 +14,11 @@ const codeClass = [
   slides: 5, // 스와이퍼 이미지 갯수
   imgPath: "./images/slide/1/", // 이미지 경로
   swiperOptions: {
-		// ... 옵션값
+	// ... 옵션값
+    slidesPerView: 1.1,
+    spaceRatio: 0.06667, // spaceBetween
+    // navigation: true,
+    // scrollbar: true
   },
 });`,
       },
