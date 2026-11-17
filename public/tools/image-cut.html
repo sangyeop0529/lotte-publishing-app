@@ -47,7 +47,11 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 420px}
 body.erasing .erase{outline:1px dashed #ff4d4f}
 body.erasing .erase .ex{display:block}
 body.erasing #overlay{cursor:crosshair}
-body.erasing .cut,body.erasing .vcut{pointer-events:none}
+body.erasing .cut,body.erasing .vcut,body.picking .cut,body.picking .vcut{pointer-events:none}
+body.picking #overlay{cursor:copy}
+.er.picking{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
+.er.picking [data-a=pick]{background:var(--accent);border-color:var(--accent);color:#fff}
+.erb{display:flex;gap:4px}
 .erase.drawing{outline:2px dashed #ff4d4f;background:rgba(255,77,79,.15)}
 #erList{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .er{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;font-size:12px;color:var(--mute);border:1px solid var(--line);border-radius:8px;padding:4px 6px;cursor:pointer}
@@ -208,7 +212,7 @@ kbd{font:inherit;font-size:11px;line-height:1.5;padding:0 6px;border-radius:5px;
     </div>
     <div class="card">
       <h3 style="display:flex;justify-content:space-between"><span>지우기</span><span class="mute" id="erCount"></span></h3>
-      <p class="hint" style="margin:0">위의 「지우개」(E)를 켜고 지울 부분(화살표 등)을 드래그하면 주변 배경색으로 채워요. 색이 맞지 않으면 아래 색상을 눌러 바꿀 수 있어요.</p>
+      <p class="hint" style="margin:0">위의 「지우개」(E)를 켜고 지울 부분(화살표 등)을 드래그하면 주변 배경색으로 채워요. 색이 맞지 않으면 「스포이드」를 누르고 이미지의 배경을 클릭하세요 — 바로 반영돼요.</p>
       <div id="erList"></div>
     </div>
     <div class="card export">
@@ -248,20 +252,44 @@ function rebuildEdit(){
   if(!S.erases.length){S.edit=null;return;}
   const c=document.createElement('canvas');c.width=S.W;c.height=S.H;
   const ctx=c.getContext('2d');ctx.drawImage(S.img,0,0);
-  S.erases.forEach(r=>{ctx.fillStyle=r.c;ctx.fillRect(r.x0,r.y0,r.x1-r.x0,r.y1-r.y0);});
+  S.erases.forEach(r=>{
+    if(r.c==='transparent')ctx.clearRect(r.x0,r.y0,r.x1-r.x0,r.y1-r.y0);
+    else{ctx.fillStyle=r.c;ctx.fillRect(r.x0,r.y0,r.x1-r.x0,r.y1-r.y0);}
+  });
   S.edit=c;
 }
-/* 영역 바로 바깥 1px 테두리에서 가장 많이 나온 색 = 배경색 */
+const hex=(r,g,b)=>'#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
+/* 배경색 추정: 영역 바깥 3px 띠의 픽셀을 비슷한 색끼리 묶어(JPG 노이즈 흡수) 가장 큰 무리의 평균색.
+   투명 PNG면 'transparent'(지운 자리를 투명하게) */
 function bgColor(x0,y0,x1,y1){
-  const X0=Math.max(0,x0-1),Y0=Math.max(0,y0-1),X1=Math.min(S.W,x1+1),Y1=Math.min(S.H,y1+1),w=X1-X0,h=Y1-Y0;
+  const T=3,X0=Math.max(0,x0-T),Y0=Math.max(0,y0-T),X1=Math.min(S.W,x1+T),Y1=Math.min(S.H,y1+T),w=X1-X0,h=Y1-Y0;
   const c=document.createElement('canvas');c.width=w;c.height=h;
   const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(src(),X0,Y0,w,h,0,0,w,h);
-  const d=ctx.getImageData(0,0,w,h).data,cnt=new Map();let best=0xffffff,bn=0;
-  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-    if(x&&y&&x<w-1&&y<h-1)continue;
-    const p=(y*w+x)*4,k=(d[p]<<16)|(d[p+1]<<8)|d[p+2],n=(cnt.get(k)||0)+1;cnt.set(k,n);if(n>bn){bn=n;best=k;}
-  }
-  return '#'+best.toString(16).padStart(6,'0');
+  const d=ctx.getImageData(0,0,w,h).data;
+  const collect=inside=>{
+    const g=new Map();
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+      const ax=X0+x,ay=Y0+y,out=ax<x0||ax>=x1||ay<y0||ay>=y1;
+      if(inside?!(ax===x0||ax===x1-1||ay===y0||ay===y1-1):!out)continue;
+      const p=(y*w+x)*4,a=d[p+3];
+      const k=a<128?-1:((d[p]>>3)<<10)|((d[p+1]>>3)<<5)|(d[p+2]>>3);
+      let s=g.get(k);if(!s){s={n:0,r:0,g:0,b:0};g.set(k,s);}
+      s.n++;s.r+=d[p];s.g+=d[p+1];s.b+=d[p+2];
+    }
+    return g;
+  };
+  let g=collect(false);if(!g.size)g=collect(true); // 영역이 이미지 전체를 덮으면 영역 자체의 테두리
+  let best=null,bk=0;g.forEach((s,k)=>{if(!best||s.n>best.n){best=s;bk=k;}});
+  if(!best)return '#ffffff';
+  if(bk===-1)return 'transparent';
+  return hex(Math.round(best.r/best.n),Math.round(best.g/best.n),Math.round(best.b/best.n));
+}
+/* 이미지의 한 점 색 (스포이드) */
+function pixelColor(x,y){
+  x=Math.max(0,Math.min(S.W-1,x));y=Math.max(0,Math.min(S.H-1,y));
+  const c=document.createElement('canvas');c.width=1;c.height=1;
+  const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(S.img,x,y,1,1,0,0,1,1);
+  const d=ctx.getImageData(0,0,1,1).data;return d[3]<128?'transparent':hex(d[0],d[1],d[2]);
 }
 function snapState(){return JSON.stringify({segs:S.segs,er:S.erases});}
 /* 가로 범위: 켜져 있고 원본이 범위 폭보다 넓을 때만 x0~x1 안으로 가둡니다 */
@@ -285,6 +313,7 @@ function undo(){
   const j=S.undo.pop();if(!j)return;const o=JSON.parse(j);
   const er=JSON.stringify(o.er);S.segs=o.segs;
   if(er!==JSON.stringify(S.erases)){S.erases=o.er;rebuildEdit();}
+  colorSnap=false;setPicking(null);
   S.sel=-1;$('#btnUndo').disabled=!S.undo.length;render();
 }
 function getExt(){return $('#fmt').value==='png'?'png':'jpg';}
@@ -297,7 +326,7 @@ function loadFile(file){
     if(S.url)URL.revokeObjectURL(S.url);
     S.file=file;S.url=url;S.img=im;S.W=im.naturalWidth;S.H=im.naturalHeight;
     S.base=(file.name||'image').replace(/\.[^.]+$/,'')||'image';
-    S.segs=[newSeg(0)];S.sel=-1;S.undo=[];excluded=new Set();S.erases=[];rebuildEdit();setErasing(false);
+    S.segs=[newSeg(0)];S.sel=-1;S.undo=[];excluded=new Set();S.erases=[];rebuildEdit();setErasing(false);setPicking(null);
     const fw=Math.max(1,parseInt($('#frW').value)||FRAME_W);
     S.frame={on:S.W>fw,x:0,w:fw};syncFrameUI();
     srcImg.src=url;$('#drop').hidden=true;stage.hidden=false;
@@ -365,7 +394,7 @@ function buildOverlay(){
     if(s.tab){const e=tabEdges(s);for(let k=1;k<e.length-1;k++){const v=document.createElement('div');v.className='vcut';v.dataset.i=i;v.dataset.k=k;v.innerHTML='<button class="vdel" title="이 세로 컷팅선 삭제">×</button><span class="vx"></span>';ov.appendChild(v);refs.vl.push({i,k,el:v});}}
   });
   refs.erases=S.erases.map((r,i)=>{
-    const d=document.createElement('div');d.className='erase';d.dataset.e=i;d.style.background=r.c;
+    const d=document.createElement('div');d.className='erase';d.dataset.e=i;d.style.background=dispColor(r.c);
     d.innerHTML='<button class="ex" title="지운 영역 되살리기">×</button>';ov.appendChild(d);return d;
   });
   S.segs.forEach((s,i)=>{
@@ -467,23 +496,52 @@ $('#btnErase').onclick=()=>{setErasing(!erasing);if(erasing)toast('지울 부분
 const clampPt=e=>({x:Math.max(0,Math.min(S.W,xFromEvent(e))),y:Math.max(0,Math.min(S.H,yFromEvent(e)))});
 const normRect=(a,b)=>({x0:Math.min(a.x,b.x),y0:Math.min(a.y,b.y),x1:Math.max(a.x,b.x),y1:Math.max(a.y,b.y)});
 function removeErase(i){if(!S.erases[i])return;snapshot();S.erases.splice(i,1);rebuildEdit();render();}
+/* 투명으로 지운 자리는 작업 화면(흰 바탕)에서 흰색으로 보입니다 */
+const dispColor=c=>c==='transparent'?'#ffffff':c;
+const erLabel=(r,i)=>'#'+(i+1)+' · x '+r.x0+' y '+r.y0+' · '+(r.x1-r.x0)+'×'+(r.y1-r.y0)+'px · '+(r.c==='transparent'?'투명':r.c);
 function renderErases(){
   const L=$('#erList');L.innerHTML='';
   $('#erCount').textContent=S.erases.length?S.erases.length+'곳':'';
   S.erases.forEach((r,i)=>{
-    const d=document.createElement('div');d.className='er';d.dataset.e=i;
-    d.innerHTML='<input type="color" title="채울 색 바꾸기"><span></span><button title="되살리기">×</button>';
-    d.firstChild.value=r.c;d.children[1].textContent='#'+(i+1)+' · x '+r.x0+' y '+r.y0+' · '+(r.x1-r.x0)+'×'+(r.y1-r.y0)+'px · '+r.c;
+    const d=document.createElement('div');d.className='er'+(pickFor===i?' picking':'');d.dataset.e=i;
+    d.innerHTML='<input type="color" title="채울 색 고르기 (바로 반영)"><span></span><div class="erb"><button data-a="pick" title="이미지에서 클릭해 색 가져오기">스포이드</button><button data-a="del" title="되살리기">×</button></div>';
+    d.firstChild.value=dispColor(r.c);d.children[1].textContent=erLabel(r,i);
     L.appendChild(d);
   });
 }
-$('#erList').addEventListener('change',e=>{
-  const row=e.target.closest('.er');if(!row||e.target.type!=='color')return;
-  const r=S.erases[+row.dataset.e];if(!r)return;snapshot();r.c=e.target.value;rebuildEdit();render();
+/* 색 바꾸기: 고르는 동안(input) 화면에 바로 반영, 다 고르면(change) 썸네일까지 갱신. 되돌리기는 한 번에 */
+let colorSnap=false,colorRaf=0;
+function setEraseColor(i,c,final){
+  const r=S.erases[i];if(!r)return;
+  if(!colorSnap){snapshot();colorSnap=true;}
+  r.c=c;
+  const d=refs.erases&&refs.erases[i];if(d)d.style.background=dispColor(c);
+  const row=$('#erList').children[i];if(row)row.children[1].textContent=erLabel(r,i);
+  if(final){colorSnap=false;cancelAnimationFrame(colorRaf);colorRaf=0;rebuildEdit();render();}
+  else if(!colorRaf)colorRaf=requestAnimationFrame(()=>{colorRaf=0;rebuildEdit();});
+}
+$('#erList').addEventListener('input',e=>{
+  const row=e.target.closest('.er');if(!row||e.target.type!=='color')return;setEraseColor(+row.dataset.e,e.target.value,false);
 });
+$('#erList').addEventListener('change',e=>{
+  const row=e.target.closest('.er');if(!row||e.target.type!=='color')return;setEraseColor(+row.dataset.e,e.target.value,true);
+});
+/* 스포이드: 목록의 「스포이드」를 누르고 이미지를 클릭하면 그 점의 색으로 바로 채웁니다 */
+let pickFor=null;
+function setPicking(i){
+  pickFor=i==null||!S.erases[i]?null:i;
+  document.body.classList.toggle('picking',pickFor!=null);
+  [...$('#erList').children].forEach((row,k)=>row.classList.toggle('picking',k===pickFor));
+  if(refs.ghost)refs.ghost.style.display='none';if(refs.vghost)refs.vghost.style.display='none';
+}
 $('#erList').addEventListener('click',e=>{
   const row=e.target.closest('.er');if(!row)return;const i=+row.dataset.e;
-  if(e.target.closest('button')){removeErase(i);return;}
+  const a=e.target.closest('[data-a]');
+  if(a&&a.dataset.a==='del'){setPicking(null);removeErase(i);return;}
+  if(a&&a.dataset.a==='pick'){
+    if(pickFor===i){setPicking(null);return;}
+    setPicking(i);toast('이미지에서 가져올 배경색을 클릭하세요 · Esc로 취소');
+  }
   if(e.target.closest('input'))return;
   const r=S.erases[i];if(r)viewer.scrollTop=Math.max(0,r.y0*S.zoom-80);
 });
@@ -491,6 +549,11 @@ $('#erList').addEventListener('click',e=>{
 let vdrag=null;
 ov.addEventListener('pointerdown',e=>{
   if(e.target.closest('.x,.vdel,.ex'))return;
+  if(pickFor!=null){
+    if(e.button!==0)return;e.preventDefault();
+    const i=pickFor;setPicking(null);setEraseColor(i,pixelColor(xFromEvent(e),yFromEvent(e)),true);
+    $('#loupe').hidden=true;toast('색을 바꿨어요: '+(S.erases[i]?erLabel(S.erases[i],i).split(' · ').pop():''));return;
+  }
   if(erasing){
     if(e.button!==0)return;
     const p=clampPt(e),d=document.createElement('div');d.className='erase drawing';ov.appendChild(d);
@@ -536,7 +599,7 @@ ov.addEventListener('mousemove',e=>{
   const hide=()=>{g.style.display='none';vg.style.display='none';};
   const c=e.target.closest('.cut'),v=e.target.closest('.vcut');
   if(drag||vdrag||edraw){hide();return;}
-  if(erasing){hide();showLoupe(xFromEvent(e),yFromEvent(e));return;}
+  if(erasing||pickFor!=null){hide();showLoupe(xFromEvent(e),yFromEvent(e));return;}
   if(c){hide();showLoupe(xFromEvent(e),S.segs[+c.dataset.i].y0);return;}
   if(v){hide();const x=tabEdges(S.segs[+v.dataset.i])[+v.dataset.k];showLoupe(x,yFromEvent(e),true);return;}
   const yy=yFromEvent(e),k=segAt(yy),s=S.segs[k];
@@ -556,7 +619,7 @@ ov.addEventListener('click',e=>{
   if(vd){const v=vd.closest('.vcut'),i=+v.dataset.i,k=+v.dataset.k,s=S.segs[i];snapshot();const ed=tabEdges(s);ed.splice(k,1);setTabEdges(s,ed);render();}
 });
 ov.addEventListener('dblclick',e=>{
-  if(erasing||e.target.closest('.cut,.vcut,.ex'))return;
+  if(erasing||pickFor!=null||e.target.closest('.cut,.vcut,.ex'))return;
   const k0=segAt(yFromEvent(e));
   if(S.segs[k0].tab&&!e.shiftKey){
     const s=S.segs[k0],x=snapX(xFromEvent(e),k0,e),ed=tabEdges(s);
@@ -662,7 +725,7 @@ function getEdges(){
 $('#btnReset').onclick=()=>{if(!S.img)return;snapshot();S.segs=[newSeg(0)];S.sel=-1;render();};
 $('#btnUndo').onclick=undo;
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){if(!$('#modal').hidden){closeModal();}else if(erasing){setErasing(false);}else if(EMBED){toParent({type:'cut:exit'});}return;}
+  if(e.key==='Escape'){if(!$('#modal').hidden){closeModal();}else if(pickFor!=null){setPicking(null);}else if(erasing){setErasing(false);}else if(EMBED){toParent({type:'cut:exit'});}return;}
   if(!S.img||/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName)||!$('#modal').hidden)return;
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return;}
   if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.key.toLowerCase()==='e'){e.preventDefault();setErasing(!erasing);return;}
