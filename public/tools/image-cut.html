@@ -35,6 +35,13 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 420px}
 #overlay{position:absolute;inset:0}
 .band{position:absolute;left:0;right:0;pointer-events:none;background:color-mix(in srgb,var(--c) 13%,transparent);border-left:3px solid var(--c)}
 .band.sel{background:color-mix(in srgb,var(--c) 26%,transparent)}
+.band.skip{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--c) 22%,transparent) 0 8px,transparent 8px 16px)}
+.fdim{position:absolute;top:0;bottom:0;background:rgba(20,20,20,.55);pointer-events:none;z-index:2}
+.fedge{position:absolute;top:0;bottom:0;width:0;border-left:2px solid #f59e0b;pointer-events:none;z-index:2}
+.fedge span{position:absolute;top:4px;left:4px;font-size:11px;line-height:16px;background:#f59e0b;color:#fff;padding:0 6px;border-radius:4px;white-space:nowrap}
+.fedge.r span{left:auto;right:4px}
+.frgrid{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-top:8px}
+.frgrid button{padding:5px 10px}
 .chip{position:absolute;left:6px;top:4px;font-size:11px;line-height:16px;padding:0 7px;border-radius:999px;background:var(--c);color:#fff;white-space:nowrap}
 .cut{position:absolute;left:0;right:0;height:13px;cursor:ns-resize;z-index:3}
 .cut::before{content:"";position:absolute;left:0;right:0;top:5px;height:2px;background:var(--cutc)}
@@ -163,6 +170,9 @@ kbd{font:inherit;font-size:11px;line-height:1.5;padding:0 6px;border-radius:5px;
           <div class="hs">탭 행</div>
           <div class="hr"><span><kbd>더블클릭</kbd></span><span>탭 행 안에서는 <b>세로</b> 컷팅선 추가</span></div>
           <div class="hr"><span><kbd>Shift</kbd><kbd>더블클릭</kbd></span><span>탭 행 안에서 <b>가로</b> 컷팅선 추가</span></div>
+          <div class="hs">가로 범위</div>
+          <div class="hr"><span><kbd>750px</kbd></span><span>원본이 더 넓으면 자동으로 켜져요 — 범위 밖(넘친 스와이퍼 등)은 잘려 나가요</span></div>
+          <div class="hr"><span><kbd>저장 안 함</kbd></span><span>코드로 만드는 구간(스와이퍼 등)은 구간 목록에서 체크하면 이미지로 저장하지 않아요</span></div>
           <div class="hs">저장</div>
           <div class="hr"><span><kbd>×</kbd></span><span>결과 미리보기에서 필요 없는 이미지 제외 — 번호는 자동으로 다시 매겨져요</span></div>
           <div class="hs">보기 · 편집</div>
@@ -170,6 +180,16 @@ kbd{font:inherit;font-size:11px;line-height:1.5;padding:0 6px;border-radius:5px;
           <div class="hr"><span><kbd>Ctrl</kbd><kbd>Z</kbd></span><span>되돌리기</span></div>
         </div>
       </details>
+    </div>
+    <div class="card">
+      <h3>가로 범위</h3>
+      <label class="chk" style="margin:0"><input type="checkbox" id="frOn">가로 폭 안으로 가두기</label>
+      <div class="frgrid">
+        <label class="f">폭(px)<input type="number" id="frW" min="1" value="750"></label>
+        <label class="f">시작 x(px)<input type="number" id="frX" min="0" value="0"></label>
+        <button id="frCenter" title="범위를 이미지 가운데로">가운데</button>
+      </div>
+      <p class="hint" id="frHint">원본이 이 폭보다 넓으면(스와이퍼 등이 밖으로 넘친 시안) 범위 안만 잘라 저장해요. 바깥은 어둡게 표시돼요.</p>
     </div>
     <div class="card export">
       <h3>내보내기</h3>
@@ -197,10 +217,16 @@ kbd{font:inherit;font-size:11px;line-height:1.5;padding:0 6px;border-radius:5px;
 
 <script>
 "use strict";
-const segColor=s=>s.tab?'#8b5cf6':'#8a8a85';
-const TOL=8,CDIFF=3;
+const segColor=s=>s.skip?'#b0b0aa':s.tab?'#8b5cf6':'#8a8a85';
+const TOL=8,CDIFF=3,FRAME_W=750;
 const $=s=>document.querySelector(s);
-const S={file:null,base:'image',W:0,H:0,img:null,url:null,zoom:1,segs:[],sel:-1,undo:[]};
+const S={file:null,base:'image',W:0,H:0,img:null,url:null,zoom:1,segs:[],sel:-1,undo:[],frame:{on:false,x:0,w:FRAME_W}};
+/* 가로 범위: 켜져 있고 원본이 범위 폭보다 넓을 때만 x0~x1 안으로 가둡니다 */
+function fr(){
+  const f=S.frame;
+  if(!f.on||!(f.w>0)||S.W<=f.w)return {x0:0,x1:S.W};
+  const x0=Math.max(0,Math.min(S.W-f.w,Math.round(f.x)||0));return {x0,x1:x0+f.w};
+}
 const viewer=$('#viewer'),stage=$('#stage'),srcImg=$('#srcImg'),ov=$('#overlay'),segList=$('#segList');
 let refs={bands:[],cuts:[],vl:[]},drag=null,dl=null,previewUrls=[];
 
@@ -209,7 +235,7 @@ let refs={bands:[],cuts:[],vl:[]},drag=null,dl=null,previewUrls=[];
 /* ---------- 유틸 ---------- */
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),2600);}
 const p2=n=>n<10?'0'+n:''+n;
-function newSeg(y0,from){return {y0,tab:false,tabCount:from?from.tabCount:2,tabState:from?from.tabState:'on',tabX:from?from.tabX:''};}
+function newSeg(y0,from){return {y0,tab:false,skip:false,tabCount:from?from.tabCount:2,tabState:from?from.tabState:'on',tabX:from?from.tabX:''};}
 const segEnd=i=>i+1<S.segs.length?S.segs[i+1].y0:S.H;
 function snapshot(){S.undo.push(JSON.stringify(S.segs));if(S.undo.length>60)S.undo.shift();$('#btnUndo').disabled=false;}
 function undo(){const j=S.undo.pop();if(!j)return;S.segs=JSON.parse(j);S.sel=-1;$('#btnUndo').disabled=!S.undo.length;render();}
@@ -223,9 +249,12 @@ function loadFile(file){
     if(S.url)URL.revokeObjectURL(S.url);
     S.file=file;S.url=url;S.img=im;S.W=im.naturalWidth;S.H=im.naturalHeight;
     S.base=(file.name||'image').replace(/\.[^.]+$/,'')||'image';
-    S.segs=[newSeg(0)];S.sel=-1;S.undo=[];excluded=new Set();
+    S.segs=[newSeg(0)];S.sel=-1;S.undo=[];excluded=new Set();colCache={};
+    const fw=Math.max(1,parseInt($('#frW').value)||FRAME_W);
+    S.frame={on:S.W>fw,x:0,w:fw};syncFrameUI();
     srcImg.src=url;$('#drop').hidden=true;stage.hidden=false;
     $('#fileInfo').textContent=(file.name||'붙여넣은 이미지')+' · '+S.W+'×'+S.H+'px';
+    if(S.frame.on)toast('가로 '+S.W+'px 이미지라 '+fw+'px 범위 안으로 잘라요 (오른쪽 「가로 범위」에서 조정)');
     ['btnReset','btnPreview'].forEach(id=>$('#'+id).disabled=false);$('#btnUndo').disabled=true;
     fitZoom();render();viewer.scrollTop=0;setTimeout(getEdges,0);
   };
@@ -268,16 +297,22 @@ stage.addEventListener('mouseleave',()=>$('#cursorY').textContent='');
 /* ---------- 탭 경계 ---------- */
 function tabEdges(s){
   const n=Math.max(1,Math.min(20,parseInt(s.tabCount)||1));
-  const c=String(s.tabX||'').split(/[,\s]+/).map(Number).filter(v=>v>0&&v<S.W).sort((a,b)=>a-b);
-  if(c.length)return [0,...c,S.W];
-  const e=[];for(let j=0;j<=n;j++)e.push(Math.round(S.W*j/n));return e;
+  const {x0,x1}=fr(),w=x1-x0;
+  const c=String(s.tabX||'').split(/[,\s]+/).map(Number).filter(v=>v>x0&&v<x1).sort((a,b)=>a-b);
+  if(c.length)return [x0,...c,x1];
+  const e=[];for(let j=0;j<=n;j++)e.push(x0+Math.round(w*j/n));return e;
 }
 
 /* ---------- 오버레이 ---------- */
 function buildOverlay(){
-  ov.innerHTML='';refs={bands:[],cuts:[],vl:[],ghost:null,vghost:null};
+  ov.innerHTML='';refs={bands:[],cuts:[],vl:[],ghost:null,vghost:null,frame:[]};
+  const {x0,x1}=fr();
+  if(x0>0||x1<S.W){
+    const mk=(cls,html)=>{const d=document.createElement('div');d.className=cls;if(html)d.innerHTML=html;ov.appendChild(d);refs.frame.push(d);return d;};
+    mk('fdim l');mk('fdim r');mk('fedge l','<span></span>');mk('fedge r','<span></span>');
+  }
   S.segs.forEach((s,i)=>{
-    const b=document.createElement('div');b.className='band'+(i===S.sel?' sel':'');b.style.setProperty('--c',segColor(s));
+    const b=document.createElement('div');b.className='band'+(i===S.sel?' sel':'')+(s.skip?' skip':'');b.style.setProperty('--c',segColor(s));
     b.innerHTML='<span class="chip"></span>';ov.appendChild(b);refs.bands.push(b);
     if(s.tab){const e=tabEdges(s);for(let k=1;k<e.length-1;k++){const v=document.createElement('div');v.className='vcut';v.dataset.i=i;v.dataset.k=k;v.innerHTML='<button class="vdel" title="이 세로 컷팅선 삭제">×</button><span class="vx"></span>';ov.appendChild(v);refs.vl.push({i,k,el:v});}}
   });
@@ -292,11 +327,19 @@ function buildOverlay(){
   layoutOverlay();
 }
 function layoutOverlay(){
-  const z=S.zoom;
+  const z=S.zoom,{x0,x1}=fr();
+  if(refs.frame&&refs.frame.length===4){
+    const [dl,dr,el,er]=refs.frame;
+    dl.style.left='0';dl.style.width=x0*z+'px';
+    dr.style.left=x1*z+'px';dr.style.width=Math.max(0,(S.W-x1)*z)+'px';
+    el.style.left=x0*z+'px';el.firstChild.textContent='x '+x0;
+    er.style.left=(x1*z-2)+'px';er.firstChild.textContent='x '+x1+' · '+(x1-x0)+'px';
+  }
   S.segs.forEach((s,i)=>{
     const e=segEnd(i),b=refs.bands[i];if(!b)return;
     b.style.top=s.y0*z+'px';b.style.height=Math.max(0,(e-s.y0)*z)+'px';
-    b.firstChild.textContent='#'+(i+1)+(s.tab?' · 탭':'');
+    b.style.left=x0*z+'px';b.style.right='auto';b.style.width=(x1-x0)*z+'px';
+    b.firstChild.textContent='#'+(i+1)+(s.skip?' · 저장 안 함':s.tab?' · 탭':'');
     const c=refs.cuts[i];if(c){c.style.top=(s.y0*z-6)+'px';c.querySelector('.cy').textContent='y '+s.y0;}
   });
   refs.vl.forEach(v=>{const s=S.segs[v.i];if(!s)return;const x=tabEdges(s)[v.k];if(x==null)return;v.el.style.left=(x*z-6)+'px';v.el.style.top=s.y0*z+'px';v.el.style.height=(segEnd(v.i)-s.y0)*z+'px';v.el.querySelector('.vx').textContent='x '+x;});
@@ -339,9 +382,9 @@ const cdiff=(p,q)=>Math.max(Math.abs((p>>16)-(q>>16)),Math.abs(((p>>8)&255)-((q>
 let colCache={};
 /* 세로 자석 후보: 해당 구간 안에서 세로로 균일한 열↔내용 열 경계, 단색 열 사이 색 변화, 넓은 빈 열의 가운데 */
 function colEdges(y0,y1){
-  const key=S.url+'|'+y0+'-'+y1;if(colCache[key])return colCache[key];
-  const W=S.W,h=Math.max(1,y1-y0),c=document.createElement('canvas');c.width=W;c.height=h;
-  const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(S.img,0,y0,W,h,0,0,W,h);
+  const {x0:fx}=fr(),key=S.url+'|'+y0+'-'+y1+'|'+fx+'-'+fr().x1;if(colCache[key])return colCache[key];
+  const W=fr().x1-fx,h=Math.max(1,y1-y0),c=document.createElement('canvas');c.width=W;c.height=h;
+  const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(S.img,fx,y0,W,h,0,0,W,h);
   const d=ctx.getImageData(0,0,W,h).data,blank=new Uint8Array(W),base=new Int32Array(W);
   for(let x=0;x<W;x++){
     const r0=d[x*4],g0=d[x*4+1],b0=d[x*4+2];let ok=1;
@@ -351,7 +394,7 @@ function colEdges(y0,y1){
   const e=[];
   for(let x=1;x<W;x++){if(blank[x-1]!==blank[x])e.push(x);else if(blank[x]&&cdiff(base[x-1],base[x])>=CDIFF)e.push(x);}
   let x=0;while(x<W){if(!blank[x]){x++;continue;}const a=x;while(x<W&&blank[x])x++;if(a>0&&x<W&&x-a>=8)e.push(Math.round((a+x)/2));}
-  const res=[...new Set(e)].sort((p,q)=>p-q);colCache[key]=res;return res;
+  const res=[...new Set(e)].map(v=>v+fx).sort((p,q)=>p-q);colCache[key]=res;return res;
 }
 function snapX(x,i,e){
   if(!$('#snap').checked||(e&&e.altKey))return x;
@@ -418,7 +461,7 @@ ov.addEventListener('dblclick',e=>{
   const k0=segAt(yFromEvent(e));
   if(S.segs[k0].tab&&!e.shiftKey){
     const s=S.segs[k0],x=snapX(xFromEvent(e),k0,e),ed=tabEdges(s);
-    if(x<=1||x>=S.W-1||ed.some(v=>Math.abs(v-x)<2))return;
+    const {x0,x1}=fr();if(x<=x0+1||x>=x1-1||ed.some(v=>Math.abs(v-x)<2))return;
     snapshot();ed.push(x);ed.sort((p,q)=>p-q);setTabEdges(s,ed);S.sel=k0;render();return;
   }
   const y=snapY(yFromEvent(e),e);let k=S.segs.length-1;
@@ -447,13 +490,14 @@ function renderList(){
   S.segs.forEach((s,i)=>{
     const row=document.createElement('div');row.className='row'+(i===S.sel?' sel':'');row.dataset.i=i;row.style.setProperty('--c',segColor(s));
     row.innerHTML='<div class="r1"><span class="no">'+(i+1)+'</span><canvas class="th" width="72" height="44"></canvas>'+
-      '<div class="mid"><label class="chk" style="margin:0"><input type="checkbox" data-f="tab">탭 행 (가로로 컷팅)</label><div class="rng"></div></div>'+
+      '<div class="mid"><label class="chk" style="margin:0"><input type="checkbox" data-f="tab"'+(s.skip?' disabled':'')+'>탭 행 (가로로 컷팅)</label><label class="chk" style="margin:0" title="스와이퍼처럼 코드로 만드는 구간은 이미지로 저장하지 않아요"><input type="checkbox" data-f="skip">저장 안 함 (코드 영역)</label><div class="rng"></div></div>'+
       '<div class="acts">'+(i>0?'<input type="number" class="ys" data-f="y0" title="시작 y(px)"><div class="nudge"><button data-n="-1" title="1px 위로">▲</button><button data-n="1" title="1px 아래로">▼</button></div><button class="del" title="위 구간과 합치기">합치기</button>':'<span class="mute" style="font-size:12px">시작 0</span>')+'</div></div>'+
-      (s.tab?tabHtml():'');
+      (s.tab&&!s.skip?tabHtml():'');
     row.querySelectorAll('[data-f]').forEach(el=>{const f=el.dataset.f;if(el.type==='checkbox')el.checked=!!s[f];else el.value=String(s[f]==null?'':s[f]);});
     segList.appendChild(row);
-    const cv=row.querySelector('canvas.th'),h=segEnd(i)-s.y0,sc=Math.min(72/S.W,44/Math.max(1,h)),ctx=cv.getContext('2d');
-    ctx.clearRect(0,0,72,44);ctx.drawImage(S.img,0,s.y0,S.W,h,0,0,Math.max(1,S.W*sc),Math.max(1,h*sc));
+    const {x0,x1}=fr(),fw=x1-x0;
+    const cv=row.querySelector('canvas.th'),h=segEnd(i)-s.y0,sc=Math.min(72/fw,44/Math.max(1,h)),ctx=cv.getContext('2d');
+    ctx.clearRect(0,0,72,44);ctx.drawImage(S.img,x0,s.y0,fw,h,0,0,Math.max(1,fw*sc),Math.max(1,h*sc));
   });
   refreshMeta();
   $('#segCount').textContent=S.segs.length+'개 구간';
@@ -488,10 +532,10 @@ function render(){buildOverlay();renderList();updateSummary();postState();}
 /* ---------- 자동 분할 ---------- */
 let edgeCache=null;
 function scanRows(){
-  const W=S.W,H=S.H,blank=new Uint8Array(H),base=new Int32Array(H),c=document.createElement('canvas');c.width=W;
+  const {x0:fx,x1:fx1}=fr(),W=fx1-fx,H=S.H,blank=new Uint8Array(H),base=new Int32Array(H),c=document.createElement('canvas');c.width=W;
   const ctx=c.getContext('2d',{willReadFrequently:true}),CH=400;
   for(let y0=0;y0<H;y0+=CH){
-    const h=Math.min(CH,H-y0);c.height=h;ctx.drawImage(S.img,0,y0,W,h,0,0,W,h);
+    const h=Math.min(CH,H-y0);c.height=h;ctx.drawImage(S.img,fx,y0,W,h,0,0,W,h);
     const d=ctx.getImageData(0,0,W,h).data;
     for(let r=0;r<h;r++){
       const o=r*W*4,r0=d[o],g0=d[o+1],b0=d[o+2];let ok=1;
@@ -503,7 +547,8 @@ function scanRows(){
 }
 /* 자석 후보: 빈 줄↔내용 줄 경계 + 단색 줄끼리 색이 바뀌는 경계(흰색→연회색 배경 등) */
 function getEdges(){
-  if(edgeCache&&edgeCache.img===S.img)return edgeCache.e;
+  const fk=fr().x0+'-'+fr().x1;
+  if(edgeCache&&edgeCache.img===S.img&&edgeCache.fk===fk)return edgeCache.e;
   const {blank,base}=scanRows(),e=[];
   for(let y=1;y<S.H;y++){
     const u0=blank[y-1],u1=blank[y];
@@ -513,7 +558,7 @@ function getEdges(){
       if(Math.max(Math.abs((p>>16)-(q>>16)),Math.abs(((p>>8)&255)-((q>>8)&255)),Math.abs((p&255)-(q&255)))>=CDIFF)e.push(y);
     }
   }
-  edgeCache={img:S.img,e};return e;
+  edgeCache={img:S.img,fk,e};return e;
 }
 $('#btnReset').onclick=()=>{if(!S.img)return;snapshot();S.segs=[newSeg(0)];S.sel=-1;render();};
 $('#btnUndo').onclick=undo;
@@ -528,11 +573,29 @@ document.addEventListener('keydown',e=>{
 });
 ['fmt'].forEach(id=>$('#'+id).addEventListener('change',updateSummary));
 
+/* ---------- 가로 범위 ---------- */
+function syncFrameUI(){
+  const f=S.frame,need=S.img?S.W>f.w:true;
+  $('#frOn').checked=f.on;$('#frW').value=f.w;$('#frX').value=fr().x0;
+  $('#frW').disabled=!f.on;$('#frX').disabled=!f.on||!need;$('#frCenter').disabled=!f.on||!need;
+  $('#frHint').textContent=!S.img?'원본이 이 폭보다 넓으면(스와이퍼 등이 밖으로 넘친 시안) 범위 안만 잘라 저장해요. 바깥은 어둡게 표시돼요.'
+    :!f.on?'꺼져 있어요 — 원본 전체 폭('+S.W+'px)으로 잘라요.'
+    :need?'범위 x '+fr().x0+'–'+fr().x1+'만 잘라 저장해요. 바깥(넘친 스와이퍼 등)은 어둡게 표시되고 저장되지 않아요.'
+    :'원본 폭('+S.W+'px)이 범위보다 좁거나 같아 전체 폭으로 잘라요.';
+}
+function applyFrame(){if(!S.img){syncFrameUI();return;}S.frame.x=fr().x0;syncFrameUI();render();}
+$('#frOn').addEventListener('change',e=>{S.frame.on=e.target.checked;applyFrame();});
+$('#frW').addEventListener('change',e=>{const w=parseInt(e.target.value);if(w>0)S.frame.w=w;applyFrame();});
+$('#frX').addEventListener('change',e=>{const x=parseInt(e.target.value);if(!isNaN(x))S.frame.x=x;applyFrame();});
+$('#frCenter').onclick=()=>{if(!S.img)return;S.frame.x=Math.round((S.W-S.frame.w)/2);applyFrame();};
+syncFrameUI();
+
 /* ---------- 출력 계산 ---------- */
 function computeOutputs(){
-  const warns=[],list=[];let img=0;
+  const warns=[],list=[],{x0:fx0,x1:fx1}=fr();let img=0;
   S.segs.forEach((s,i)=>{
     const y0=s.y0,y1=segEnd(i);
+    if(s.skip)return;
     if(y1-y0<3)warns.push('구간 #'+(i+1)+' 높이가 '+(y1-y0)+'px로 매우 작아요');
     if(s.tab){
       const e=tabEdges(s),n=e.length-1,st=1;
@@ -541,7 +604,7 @@ function computeOutputs(){
         const on=s.tabState==='on';
         list.push({name:'tab_'+p2(st+j)+'_'+(on?'on':'off'),x0:e[j],x1:e[j+1],y0,y1,type:'탭'});
       }
-    }else{img++;list.push({name:'img_'+p2(img),x0:0,x1:S.W,y0,y1,type:'일반'});}
+    }else{img++;list.push({name:'img_'+p2(img),x0:fx0,x1:fx1,y0,y1,type:'일반'});}
   });
   const seen=new Set();
   for(const o of list){if(seen.has(o.name))warns.push('파일명 중복: '+o.name+' (탭 행의 on/off 상태가 같은 구간이 여러 개예요)');seen.add(o.name);}
@@ -550,7 +613,8 @@ function computeOutputs(){
 function updateSummary(){
   if(!S.img)return;
   const r=computeOutputs();
-  $('#sum').textContent='출력 예상: '+r.list.length+'개 (.'+getExt()+')';
+  const {x0,x1}=fr(),sk=S.segs.filter(s=>s.skip).length;
+  $('#sum').textContent='출력 예상: '+r.list.length+'개 (.'+getExt()+') · 가로 '+(x1-x0)+'px'+(x0>0||x1<S.W?' (x '+x0+'–'+x1+')':'')+(sk?' · 저장 안 함 '+sk+'구간':'');
   const w=$('#warns');w.innerHTML='';r.warns.forEach(t=>{const d=document.createElement('div');d.textContent='⚠ '+t;w.appendChild(d);});
 }
 
