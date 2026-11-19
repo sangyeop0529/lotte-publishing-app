@@ -118,6 +118,10 @@ canvas.th{width:72px;height:44px;background:repeating-conic-gradient(#ddd 0 25%,
 .item .tb canvas,.item .tb img{max-width:100%;max-height:110px}
 .item{position:relative}
 .item b{font-size:13px;word-break:break-all}
+.item .nm{display:flex;align-items:center;gap:3px;min-width:0}
+.item .nm input{font-size:12px;font-weight:600;padding:3px 6px}
+.item .nm input.ren{border-color:var(--accent);color:var(--accent)}
+.item .nm em{font-style:normal;font-size:12px;color:var(--mute)}
 .item .ix{position:absolute;top:4px;right:4px;width:24px;height:24px;padding:0;border-radius:50%;font-size:14px;line-height:20px;background:#111;color:#fff;border-color:#111;z-index:1}
 .item.off{opacity:.45}
 .item.off .tb{filter:grayscale(1)}
@@ -225,6 +229,7 @@ kbd{font:inherit;font-size:11px;line-height:1.5;padding:0 6px;border-radius:5px;
           <div class="hr"><span><kbd>이름</kbd></span><span>시안 목록의 칸 = 폴더 이름(기본 tab1·tab2…), 내보내기의 칸 = 맨 위 폴더 이름</span></div>
           <div class="hs">저장</div>
           <div class="hr"><span><kbd>×</kbd></span><span>결과 미리보기에서 필요 없는 이미지 제외 — 번호는 자동으로 다시 매겨져요</span></div>
+          <div class="hr"><span><kbd>이름 칸</kbd></span><span>결과 미리보기에서 이미지 이름을 바로 고칠 수 있어요 — 비우면 자동 이름. 컷팅선을 옮기면 그 이미지 이름은 자동으로 돌아가니 마지막에 고치세요</span></div>
           <div class="hs">보기 · 편집</div>
           <div class="hr"><span><kbd>Ctrl</kbd><kbd>휠</kbd></span><span>확대 / 축소</span></div>
           <div class="hr"><span><kbd>Ctrl</kbd><kbd>Z</kbd></span><span>되돌리기</span></div>
@@ -278,7 +283,7 @@ kbd{font:inherit;font-size:11px;line-height:1.5;padding:0 6px;border-radius:5px;
 const segColor=s=>s.skip?'#b0b0aa':s.tab?'#8b5cf6':'#8a8a85';
 const TOL=8,CDIFF=3,FRAME_W=750;
 const $=s=>document.querySelector(s);
-const S={file:null,base:'image',W:0,H:0,img:null,url:null,zoom:1,segs:[],sel:-1,undo:[],frame:{on:false,x:0,w:FRAME_W},erases:[],edit:null,ver:0,excluded:new Set(),name:'',fresh:false};
+const S={file:null,base:'image',W:0,H:0,img:null,url:null,zoom:1,segs:[],sel:-1,undo:[],frame:{on:false,x:0,w:FRAME_W},erases:[],edit:null,ver:0,excluded:new Set(),rename:{},name:'',fresh:false};
 /* 지우개를 적용한 작업용 캔버스 (지운 영역이 없으면 원본 이미지) */
 const src=()=>S.edit||S.img;
 function rebuildEdit(){
@@ -361,7 +366,7 @@ function getExt(){return $('#fmt').value==='png'?'png':'jpg';}
 /* ---------- 시안 여러 장 ----------
    시안마다 상태(컷팅선·지우개·되돌리기·가로 범위·제외 목록·폴더 이름)를 따로 보관하고,
    작업 중인 시안만 S에 펼쳐 씁니다. 다른 시안을 잠깐 다룰 때는 inDoc()으로 바꿨다가 바로 되돌립니다. */
-const DK=['file','base','W','H','img','url','segs','sel','undo','frame','erases','edit','ver','excluded','name','fresh'];
+const DK=['file','base','W','H','img','url','segs','sel','undo','frame','erases','edit','ver','excluded','rename','name','fresh'];
 let docs=[],cur=-1;
 const D=i=>i===cur?S:docs[i];
 function saveCur(){if(cur<0||!docs[cur])return;const d=docs[cur];DK.forEach(k=>d[k]=S[k]);}
@@ -387,7 +392,7 @@ async function addFiles(list){
   loaded.forEach(({file,url,im})=>{
     const W=im.naturalWidth,H=im.naturalHeight;
     docs.push({file,url,img:im,W,H,base:(file.name||'image').replace(/\.[^.]+$/,'')||'image',
-      segs:[newSeg(0)],sel:-1,undo:[],frame:{on:W>fw,x:0,w:fw},erases:[],edit:null,ver:0,excluded:new Set(),name:'',fresh:true});
+      segs:[newSeg(0)],sel:-1,undo:[],frame:{on:W>fw,x:0,w:fw},erases:[],edit:null,ver:0,excluded:new Set(),rename:{},name:'',fresh:true});
   });
   const skip=files.length-loaded.length;
   if(cur<0){activate(start);if(skip)toast('열 수 없는 이미지 '+skip+'장은 건너뛰었어요');}
@@ -437,7 +442,7 @@ function removeDoc(i){
   showFileInfo();renderDocs();updateSummary();postState();
 }
 function resetEmpty(){
-  Object.assign(S,{file:null,base:'image',W:0,H:0,img:null,url:null,segs:[],sel:-1,undo:[],erases:[],edit:null,ver:0,excluded:new Set(),name:'',fresh:false});
+  Object.assign(S,{file:null,base:'image',W:0,H:0,img:null,url:null,segs:[],sel:-1,undo:[],erases:[],edit:null,ver:0,excluded:new Set(),rename:{},name:'',fresh:false});
   setErasing(false);setPicking(null);
   ov.innerHTML='';segList.innerHTML='';refs={bands:[],cuts:[],vl:[]};
   stage.hidden=true;$('#drop').hidden=false;$('#fileInfo').textContent='원본 이미지를 열어 주세요';
@@ -983,10 +988,16 @@ $('#mClose').onclick=closeModal;
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
 const okey=o=>o.x0+','+o.y0+','+o.x1+','+o.y1;
 /* 미리보기에서 ×로 뺀 이미지를 제외하고, img 번호는 남은 것끼리 다시 매깁니다 */
+/* 이미지 이름: 미리보기에서 바꾼 이름(S.rename, 구간 좌표 기준)이 있으면 그 이름, 없으면 자동 이름(img_01·tab_01_on) */
+function dupWarns(paths){
+  const seen=new Set(),dup=new Set();paths.forEach(v=>{if(seen.has(v))dup.add(v);seen.add(v);});
+  return [...dup].map(v=>'이미지 이름 중복: '+v+' — 저장하면 하나만 남아서 저장을 막아요');
+}
 function exportList(){
   const r=computeOutputs();let n=0;
-  const all=r.list.map(o=>{const off=S.excluded.has(okey(o));const name=(o.type!=='탭'&&!off)?'img_'+p2(++n):o.name;return {...o,name,off};});
-  return {all,list:all.filter(o=>!o.off),warns:r.warns};
+  const all=r.list.map(o=>{const k=okey(o),off=S.excluded.has(k),auto=(o.type!=='탭'&&!off)?'img_'+p2(++n):o.name;return {...o,auto,name:off?auto:(S.rename[k]||auto),off};});
+  const list=all.filter(o=>!o.off);
+  return {all,list,warns:r.warns.filter(w=>!w.startsWith('파일명 중복')).concat(dupWarns(list.map(o=>o.name)))};
 }
 /* 여러 장 저장 계획: 탭 버튼은 맨 위 폴더에 한 번만(같은 이름은 먼저 나온 시안 것), 일반 이미지는 시안별 폴더 */
 function planMulti(){
@@ -1001,19 +1012,20 @@ function planMulti(){
       r.list.forEach(o=>{
         const k=okey(o),off=S.excluded.has(k);
         if(o.type==='탭'){
-          const it={...o,d,k,off,path:o.name,from:folder};
+          const nm=off?o.name:(S.rename[k]||o.name),it={...o,auto:o.name,name:nm,d,k,off,path:nm,from:folder};
           if(!tabIdx.has(o.name)){tabIdx.set(o.name,tabItems.length);tabItems.push(it);}
           else if(tabItems[tabIdx.get(o.name)].off&&!off)tabItems[tabIdx.get(o.name)]=it;
-        }else{const name=off?o.name:'img_'+p2(++n);g.items.push({...o,name,d,k,off,path:folder+'/'+name,from:folder});}
+        }else{const auto=off?o.name:'img_'+p2(++n),name=off?auto:(S.rename[k]||auto);g.items.push({...o,auto,name,d,k,off,path:folder+'/'+name,from:folder});}
       });
       groups.push(g);
     });
   });
   const nums=new Set(tabItems.map(o=>o.name.slice(4,6)));
   nums.forEach(nn=>['on','off'].forEach(st=>{if(!tabIdx.has('tab_'+nn+'_'+st))warns.push('tab_'+nn+'_'+st+' 이미지가 없어요 — 이 탭이 '+st+'인 시안이 없어요 (탭 행 상태 확인)');}));
-  tabItems.sort((a,b)=>a.name.localeCompare(b.name));
+  tabItems.sort((a,b)=>a.auto.localeCompare(b.auto));
   const all=(tabItems.length?[{title:root+'/ (탭 버튼 · 공통)',items:tabItems}]:[]).concat(groups);
   const count=all.reduce((s,g)=>s+g.items.filter(o=>!o.off).length,0);
+  dupWarns(all.flatMap(g=>g.items).filter(o=>!o.off).map(o=>o.path)).forEach(w=>warns.push(w));
   return {root,groups:all,warns:[...new Set(warns)],count};
 }
 function gridItem(o,ext,dIdx){
@@ -1023,9 +1035,15 @@ function gridItem(o,ext,dIdx){
   const w=o.x1-o.x0,h=o.y1-o.y0,c=document.createElement('canvas'),sc=Math.min(1,140/w,110/h);
   c.width=Math.max(1,Math.round(w*sc));c.height=Math.max(1,Math.round(h*sc));
   c.getContext('2d').drawImage(src(),o.x0,o.y0,w,h,0,0,c.width,c.height);tb.appendChild(c);it.appendChild(tb);
-  const b=document.createElement('b');b.textContent=o.off?'제외됨':o.name+'.'+ext;
+  if(o.off){const b=document.createElement('b');b.textContent='제외됨';it.appendChild(b);}
+  else{
+    const nm=document.createElement('div');nm.className='nm';
+    const inp=document.createElement('input');inp.type='text';inp.className='iname'+(o.name!==o.auto?' ren':'');inp.value=o.name;inp.placeholder=o.auto;
+    inp.title='이미지 이름 바꾸기 — 비우면 자동 이름('+o.auto+')';inp.dataset.k=okey(o);inp.dataset.auto=o.auto;if(dIdx!=null)inp.dataset.d=dIdx;
+    const em=document.createElement('em');em.textContent='.'+ext;nm.appendChild(inp);nm.appendChild(em);it.appendChild(nm);
+  }
   const sp=document.createElement('span');sp.textContent=w+'×'+h+'px · y '+o.y0+'–'+o.y1+(dIdx!=null&&o.type==='탭'?' · '+o.from+'에서':'');
-  it.appendChild(b);it.appendChild(sp);
+  it.appendChild(sp);
   if(!dl&&!o.off){const cv=cropCanvas(o);new Promise(res=>cv.toBlob(res,ext==='jpg'?'image/jpeg':'image/png',1)).then(bl=>{if(!bl)return;const u=URL.createObjectURL(bl);previewUrls.push(u);const im=document.createElement('img');im.src=u;im.alt=o.name;tb.replaceChildren(im);}).catch(()=>{});}
   return it;
 }
@@ -1049,25 +1067,21 @@ function renderGrid(){
   $('#mTitle').textContent='결과 미리보기 · '+list.length+'개 저장'+(all.length>list.length?' (제외 '+(all.length-list.length)+'개)':'')+' (.'+ext+')';
   $('#mWarn').innerHTML='';warns.forEach(t=>{const d=document.createElement('div');d.textContent='⚠ '+t;$('#mWarn').appendChild(d);});
   grid.innerHTML='';
-  all.forEach(o=>{
-    const it=document.createElement('div');it.className='item'+(o.off?' off':'');
-    const x=document.createElement('button');x.className='ix';x.dataset.k=okey(o);x.title=o.off?'다시 포함':'이 이미지 제외';x.textContent=o.off?'복원':'×';it.appendChild(x);
-    const tb=document.createElement('div');tb.className='tb';
-    const w=o.x1-o.x0,h=o.y1-o.y0,c=document.createElement('canvas'),sc=Math.min(1,140/w,110/h);
-    c.width=Math.max(1,Math.round(w*sc));c.height=Math.max(1,Math.round(h*sc));
-    c.getContext('2d').drawImage(src(),o.x0,o.y0,w,h,0,0,c.width,c.height);tb.appendChild(c);it.appendChild(tb);
-    const b=document.createElement('b');b.textContent=o.off?'제외됨':o.name+'.'+ext;
-    const sp=document.createElement('span');sp.textContent=w+'×'+h+'px · y '+o.y0+'–'+o.y1;
-    it.appendChild(b);it.appendChild(sp);grid.appendChild(it);
-    if(!dl&&!o.off){cropBlob(o).then(bl=>{const u=URL.createObjectURL(bl);previewUrls.push(u);const im=document.createElement('img');im.src=u;im.alt=o.name;tb.replaceChildren(im);}).catch(()=>{});}
-  });
+  all.forEach(o=>grid.appendChild(gridItem(o,ext,null)));
   $('#mZip').disabled=!list.length;
   $('#mDir').hidden=!CAN_DIR||!!dl;$('#mDir').disabled=!list.length;
 }
+$('#mGrid').addEventListener('change',e=>{
+  const inp=e.target.closest('.iname');if(!inp)return;
+  const v=cleanName(inp.value).replace(/\.(jpe?g|png)$/i,''),R=(inp.dataset.d!=null?D(+inp.dataset.d):S).rename;
+  if(v!==inp.value.trim())toast('\\ / : * ? " < > | 와 확장자는 이름에서 뺐어요');
+  if(!v||v===inp.dataset.auto)delete R[inp.dataset.k];else R[inp.dataset.k]=v;
+  const g=$('#mGrid'),top=g.scrollTop;$('#mStat').textContent='';renderGrid();g.scrollTop=top;updateSummary();
+});
 $('#mGrid').addEventListener('click',e=>{
   const x=e.target.closest('.ix');if(!x)return;
   const k=x.dataset.k,ex=x.dataset.d!=null?D(+x.dataset.d).excluded:S.excluded;if(ex.has(k))ex.delete(k);else ex.add(k);
-  $('#mStat').textContent='';renderGrid();
+  const g=$('#mGrid'),top=g.scrollTop;$('#mStat').textContent='';renderGrid();g.scrollTop=top;
 });
 $('#btnPreview').onclick=()=>{
   if(!S.img)return;
@@ -1088,7 +1102,8 @@ async function buildFiles(list,ext,stat){
 /* 저장할 파일 목록: 이름은 맨 위 폴더 기준 상대 경로 (여러 장이면 tab1/img_01.jpg, tab_01_on.jpg 등) */
 function outCount(){return MULTI()?planMulti().count:exportList().list.length;}
 async function prepareFiles(stat){
-  const ext=getExt();
+  const ext=getExt(),dw=(MULTI()?planMulti():exportList()).warns.filter(w=>w.startsWith('이미지 이름 중복'));
+  if(dw.length)throw new Error(dw[0].split(' — ')[0]+' — 이름을 바꿔 주세요');
   if(!MULTI())return {root:rootName(),files:await buildFiles(exportList().list,ext,stat)};
   const p=planMulti(),items=p.groups.flatMap(g=>g.items).filter(o=>!o.off),files=[];
   for(let k=0;k<items.length;k++){
