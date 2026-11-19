@@ -143,6 +143,20 @@ canvas.th{width:72px;height:44px;background:repeating-conic-gradient(#ddd 0 25%,
 .hr>span:last-child{line-height:1.4}
 .hr b{color:var(--ink)}
 kbd{font:inherit;font-size:11px;line-height:1.5;padding:0 6px;border-radius:5px;border:1px solid var(--line);border-bottom-width:2px;background:var(--panel);color:var(--ink);white-space:nowrap}
+.docs h3{display:flex;justify-content:space-between;align-items:center;gap:6px}
+#docAdd{padding:2px 9px;font-size:12px}
+#docList{max-height:230px;overflow:auto;margin:0 -4px;padding:0 4px}
+.doc{display:grid;grid-template-columns:20px 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:5px 6px;margin-top:6px;cursor:pointer;background:var(--panel)}
+.doc.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.dno{font-size:12px;color:var(--mute);text-align:center}
+.dmid{display:flex;flex-direction:column;gap:3px;min-width:0}
+.dname{padding:3px 6px!important;font-size:12px!important}
+.docs.single .dname{display:none}
+.dfile{font-size:11px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dacts{display:flex;gap:3px}
+.dacts button{padding:2px 7px;font-size:11px}
+.ghd{grid-column:1/-1;font-size:13px;font-weight:700;padding-top:4px;border-bottom:1px dashed var(--line);padding-bottom:4px}
+.ghd span{font-weight:400;color:var(--mute);font-size:12px;margin-left:6px}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:8px 14px;border-radius:999px;font-size:13px;z-index:30;opacity:0;pointer-events:none;transition:opacity .2s}
 #toast.on{opacity:.95}
 @media (max-width:900px){body{height:auto}main{display:block}#viewer{height:60vh}#panel{overflow:visible}#segList{max-height:50vh}}
@@ -153,7 +167,7 @@ kbd{font:inherit;font-size:11px;line-height:1.5;padding:0 6px;border-radius:5px;
   <button id="btnBack" hidden title="퍼블리싱 앱으로 돌아가기 (Esc)">← 돌아가기</button>
   <span class="brand">이미지 컷팅 도구</span>
   <button id="btnOpen" class="pri">이미지 열기</button>
-  <input type="file" id="file" accept="image/*" hidden>
+  <input type="file" id="file" accept="image/*" multiple hidden>
   <span id="fileInfo">원본 이미지를 열어 주세요</span>
   <button id="btnUndo" disabled>되돌리기</button><button id="btnReset" disabled>모두 초기화</button>
   <button id="btnErase" disabled title="드래그한 영역을 주변 배경색으로 채워 지워요 (E)">지우개</button>
@@ -168,11 +182,17 @@ kbd{font:inherit;font-size:11px;line-height:1.5;padding:0 6px;border-radius:5px;
     <div id="drop">
       <b>이미지를 여기로 끌어다 놓으세요</b>
       <span>또는 Ctrl+V로 붙여넣기 · 위의 「이미지 열기」 버튼</span>
+      <span>탭1·탭2·탭3 시안처럼 <b style="font-size:inherit">여러 장을 한 번에</b> 넣을 수 있어요</span>
       <span>이미지는 내 브라우저 안에서만 처리되고 어디에도 업로드되지 않아요</span>
     </div>
     <div id="stage" hidden><img id="srcImg" alt=""><div id="overlay"></div></div>
   </section>
   <aside id="panel">
+    <div class="card docs single" id="docCard" hidden>
+      <h3><span>시안 목록 <span class="mute" id="docCount" style="font-weight:400"></span></span><button id="docAdd" title="시안 이미지 추가 (여러 장 선택 가능)">+ 시안 추가</button></h3>
+      <div id="docList"></div>
+      <p class="hint" id="docHint"></p>
+    </div>
     <div class="card list">
       <h3><span>구간 목록</span><span class="mute" id="segCount"></span></h3>
       <div id="segList"></div>
@@ -198,6 +218,11 @@ kbd{font:inherit;font-size:11px;line-height:1.5;padding:0 6px;border-radius:5px;
           <div class="hs">지우개</div>
           <div class="hr"><span><kbd>E</kbd></span><span>지우개 켜기/끄기 — 드래그한 영역을 주변 배경색(단색)으로 채워요</span></div>
           <div class="hr"><span><kbd>×</kbd></span><span>지운 영역 되살리기 (지우개 모드 또는 「지우기」 목록에서)</span></div>
+          <div class="hs">시안 여러 장</div>
+          <div class="hr"><span><kbd>여러 장</kbd></span><span>탭1·탭2·탭3 시안을 한 번에 넣으면 「시안 목록」에서 골라 작업해요 (파일명 순)</span></div>
+          <div class="hr"><span><kbd>복사</kbd></span><span>새 시안을 처음 열면 앞 시안의 컷팅선을 복사해요 — 필요 없으면 「모두 초기화」</span></div>
+          <div class="hr"><span><kbd>탭 on</kbd></span><span>복사할 때 탭 행은 시안 순서 번호의 탭만 on (2번째 시안 = 02 on)</span></div>
+          <div class="hr"><span><kbd>이름</kbd></span><span>시안 목록의 칸 = 폴더 이름(기본 tab1·tab2…), 내보내기의 칸 = 맨 위 폴더 이름</span></div>
           <div class="hs">저장</div>
           <div class="hr"><span><kbd>×</kbd></span><span>결과 미리보기에서 필요 없는 이미지 제외 — 번호는 자동으로 다시 매겨져요</span></div>
           <div class="hs">보기 · 편집</div>
@@ -227,6 +252,9 @@ kbd{font:inherit;font-size:11px;line-height:1.5;padding:0 6px;border-radius:5px;
         <label class="f">저장 형식
           <select id="fmt"><option value="jpg" selected>JPG (품질 100 · 거의 무손실)</option><option value="png">PNG (완전 무손실)</option></select>
         </label>
+        <label class="f">저장 폴더 이름 (ZIP 이름)
+          <input type="text" id="rootName" title="저장할 때 만들어지는 맨 위 폴더 이름 · 비우면 기본값">
+        </label>
       </div>
       <div id="sum">이미지를 열어 주세요</div>
       <div id="warns"></div>
@@ -250,7 +278,7 @@ kbd{font:inherit;font-size:11px;line-height:1.5;padding:0 6px;border-radius:5px;
 const segColor=s=>s.skip?'#b0b0aa':s.tab?'#8b5cf6':'#8a8a85';
 const TOL=8,CDIFF=3,FRAME_W=750;
 const $=s=>document.querySelector(s);
-const S={file:null,base:'image',W:0,H:0,img:null,url:null,zoom:1,segs:[],sel:-1,undo:[],frame:{on:false,x:0,w:FRAME_W},erases:[],edit:null,ver:0};
+const S={file:null,base:'image',W:0,H:0,img:null,url:null,zoom:1,segs:[],sel:-1,undo:[],frame:{on:false,x:0,w:FRAME_W},erases:[],edit:null,ver:0,excluded:new Set(),name:'',fresh:false};
 /* 지우개를 적용한 작업용 캔버스 (지운 영역이 없으면 원본 이미지) */
 const src=()=>S.edit||S.img;
 function rebuildEdit(){
@@ -330,31 +358,141 @@ function undo(){
 function getExt(){return $('#fmt').value==='png'?'png':'jpg';}
 
 /* ---------- 불러오기 ---------- */
-function loadFile(file){
-  if(!file||!file.type.startsWith('image/')){toast('이미지 파일만 열 수 있어요');return;}
-  const url=URL.createObjectURL(file),im=new Image();
-  im.onload=()=>{
-    if(S.url)URL.revokeObjectURL(S.url);
-    S.file=file;S.url=url;S.img=im;S.W=im.naturalWidth;S.H=im.naturalHeight;
-    S.base=(file.name||'image').replace(/\.[^.]+$/,'')||'image';
-    S.segs=[newSeg(0)];S.sel=-1;S.undo=[];excluded=new Set();S.erases=[];rebuildEdit();setErasing(false);setPicking(null);
-    const fw=Math.max(1,parseInt($('#frW').value)||FRAME_W);
-    S.frame={on:S.W>fw,x:0,w:fw};syncFrameUI();
-    srcImg.src=url;$('#drop').hidden=true;stage.hidden=false;
-    $('#fileInfo').textContent=(file.name||'붙여넣은 이미지')+' · '+S.W+'×'+S.H+'px';
-    if(S.frame.on)toast('가로 '+S.W+'px 이미지라 '+fw+'px 범위 안으로 잘라요 (오른쪽 「가로 범위」에서 조정)');
-    ['btnReset','btnPreview','btnErase'].forEach(id=>$('#'+id).disabled=false);$('#btnUndo').disabled=true;
-    fitZoom();render();viewer.scrollTop=0;setTimeout(getEdges,0);
-  };
-  im.onerror=()=>toast('이미지를 열 수 없어요');
-  im.src=url;
+/* ---------- 시안 여러 장 ----------
+   시안마다 상태(컷팅선·지우개·되돌리기·가로 범위·제외 목록·폴더 이름)를 따로 보관하고,
+   작업 중인 시안만 S에 펼쳐 씁니다. 다른 시안을 잠깐 다룰 때는 inDoc()으로 바꿨다가 바로 되돌립니다. */
+const DK=['file','base','W','H','img','url','segs','sel','undo','frame','erases','edit','ver','excluded','name','fresh'];
+let docs=[],cur=-1;
+const D=i=>i===cur?S:docs[i];
+function saveCur(){if(cur<0||!docs[cur])return;const d=docs[cur];DK.forEach(k=>d[k]=S[k]);}
+function loadDoc(i){const d=docs[i];DK.forEach(k=>S[k]=d[k]);cur=i;}
+function inDoc(i,fn){if(i===cur)return fn();const o=cur;saveCur();loadDoc(i);try{return fn();}finally{saveCur();loadDoc(o);}}
+const BADCH=/[\\/:*?"<>|]/g;
+const cleanName=v=>String(v||'').replace(BADCH,'').trim();
+const docName=i=>cleanName(D(i).name)||('tab'+(i+1));
+const MULTI=()=>docs.length>1;
+const rootDefault=()=>MULTI()?'images':(S.base||'image')+'_cut';
+function rootName(){return cleanName($('#rootName').value)||rootDefault();}
+function readImage(file){
+  return new Promise(res=>{const url=URL.createObjectURL(file),im=new Image();
+    im.onload=()=>res({file,url,im});im.onerror=()=>{URL.revokeObjectURL(url);res(null);};im.src=url;});
 }
+async function addFiles(list){
+  const files=[...(list||[])].filter(f=>f&&f.type&&f.type.startsWith('image/'));
+  if(!files.length){toast('이미지 파일만 열 수 있어요');return;}
+  files.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko',{numeric:true}));
+  const loaded=(await Promise.all(files.map(readImage))).filter(Boolean);
+  if(!loaded.length){toast('이미지를 열 수 없어요');return;}
+  const fw=Math.max(1,parseInt($('#frW').value)||FRAME_W),start=docs.length;
+  loaded.forEach(({file,url,im})=>{
+    const W=im.naturalWidth,H=im.naturalHeight;
+    docs.push({file,url,img:im,W,H,base:(file.name||'image').replace(/\.[^.]+$/,'')||'image',
+      segs:[newSeg(0)],sel:-1,undo:[],frame:{on:W>fw,x:0,w:fw},erases:[],edit:null,ver:0,excluded:new Set(),name:'',fresh:true});
+  });
+  const skip=files.length-loaded.length;
+  if(cur<0){activate(start);if(skip)toast('열 수 없는 이미지 '+skip+'장은 건너뛰었어요');}
+  else{saveCur();renderDocs();updateSummary();postState();toast('시안 '+loaded.length+'장을 추가했어요'+(skip?' (열 수 없는 '+skip+'장 제외)':'')+' · 「시안 목록」에서 골라 작업하세요');}
+}
+/* 새 시안을 처음 열 때: 앞쪽(없으면 직전에 보던) 시안의 컷팅선을 복사. 탭 행은 이 시안 순서 번호의 탭만 on */
+function copyCuts(i,prev){
+  let j=-1;
+  for(let k=i-1;k>=0;k--){const d=D(k);if(!d.fresh&&d.segs.length>1){j=k;break;}}
+  if(j<0&&prev>=0&&prev!==i&&D(prev).segs.length>1)j=prev;
+  if(j<0)return false;
+  const from=D(j),segs=JSON.parse(JSON.stringify(from.segs)).filter((s,k)=>k===0||s.y0<S.H);
+  segs[0].y0=0;
+  S.undo=[snapState()];
+  S.segs=segs;
+  if(from.W===S.W)S.frame={...from.frame};
+  S.segs.forEach(s=>{if(s.tab){const n=tabEdges(s).length-1;if(i+1<=n)s.tabState=String(i+1);}});
+  toast((j+1)+'번 시안('+docName(j)+')의 컷팅선을 복사했어요 · 필요 없으면 「모두 초기화」');
+  return true;
+}
+function activate(i){
+  if(!docs[i])return;
+  const prev=cur;
+  if(cur!==i){if(cur>=0)saveCur();loadDoc(i);}
+  colorSnap=false;setErasing(false);setPicking(null);
+  let copied=false;
+  if(S.fresh){S.fresh=false;copied=copyCuts(i,prev);}
+  srcImg.src=S.url;$('#drop').hidden=true;stage.hidden=false;
+  showFileInfo();syncFrameUI();
+  ['btnReset','btnPreview','btnErase'].forEach(id=>$('#'+id).disabled=false);
+  $('#btnUndo').disabled=!S.undo.length;
+  if(prev<0)fitZoom();else applyZoom();
+  render();
+  if(prev!==i)viewer.scrollTop=0;
+  if(!copied&&S.frame.on&&S.segs.length===1&&!S.undo.length)toast('가로 '+S.W+'px 이미지라 '+S.frame.w+'px 범위 안으로 잘라요 (오른쪽 「가로 범위」에서 조정)');
+  setTimeout(getEdges,0);
+}
+function showFileInfo(){$('#fileInfo').textContent=(MULTI()?(cur+1)+'/'+docs.length+' · ':'')+(S.file&&S.file.name||'붙여넣은 이미지')+' · '+S.W+'×'+S.H+'px';}
+function docDirty(d){return d.segs.length>1||d.erases.length>0;}
+function removeDoc(i){
+  if(!docs[i])return;
+  if(docDirty(D(i))&&!confirm((i+1)+'번 시안('+docName(i)+')의 작업 내용이 사라져요. 목록에서 뺄까요?'))return;
+  saveCur();URL.revokeObjectURL(docs[i].url);docs.splice(i,1);
+  if(!docs.length){cur=-1;resetEmpty();return;}
+  if(i===cur){cur=-1;activate(Math.min(i,docs.length-1));return;}
+  if(i<cur)cur--;
+  showFileInfo();renderDocs();updateSummary();postState();
+}
+function resetEmpty(){
+  Object.assign(S,{file:null,base:'image',W:0,H:0,img:null,url:null,segs:[],sel:-1,undo:[],erases:[],edit:null,ver:0,excluded:new Set(),name:'',fresh:false});
+  setErasing(false);setPicking(null);
+  ov.innerHTML='';segList.innerHTML='';refs={bands:[],cuts:[],vl:[]};
+  stage.hidden=true;$('#drop').hidden=false;$('#fileInfo').textContent='원본 이미지를 열어 주세요';
+  ['btnReset','btnPreview','btnErase','btnUndo'].forEach(id=>$('#'+id).disabled=true);
+  $('#segCount').textContent='';$('#sum').textContent='이미지를 열어 주세요';$('#warns').innerHTML='';
+  renderErases();renderDocs();postState();
+}
+function renderDocs(){
+  const card=$('#docCard'),L=$('#docList');
+  card.hidden=!docs.length;card.classList.toggle('single',!MULTI());
+  $('#docCount').textContent=docs.length?docs.length+'장':'';
+  $('#rootName').placeholder=docs.length?rootDefault():'';
+  L.innerHTML='';
+  docs.forEach((_,i)=>{
+    const d=D(i),row=document.createElement('div');row.className='doc'+(i===cur?' on':'');row.dataset.d=i;
+    row.innerHTML='<span class="dno">'+(i+1)+'</span><div class="dmid"><input type="text" class="dname" title="저장 폴더 이름 — 비우면 tab'+(i+1)+'"><span class="dfile"></span></div>'+
+      '<div class="dacts"><button data-a="up" title="위로">▲</button><button data-a="down" title="아래로">▼</button><button data-a="del" title="목록에서 빼기">×</button></div>';
+    const inp=row.querySelector('.dname');inp.value=d.name||'';inp.placeholder='tab'+(i+1);
+    row.querySelector('.dfile').textContent=(d.file&&d.file.name||'붙여넣은 이미지')+' · '+d.W+'×'+d.H+(d.fresh?' · 아직 안 열어 봄':d.segs.length>1?' · '+d.segs.length+'구간':'');
+    row.querySelector('[data-a=up]').disabled=i===0;row.querySelector('[data-a=down]').disabled=i===docs.length-1;
+    L.appendChild(row);
+  });
+  $('#docHint').textContent=!MULTI()?'시안을 더 넣으면(탭1·탭2·탭3) 한 번에 저장돼요. 새 시안은 앞 시안의 컷팅선을 복사해서 시작해요.'
+    :'저장 구조: '+rootName()+'/tab_01_on… (탭 버튼) + '+rootName()+'/폴더 이름/img_01… · 칸에 입력하면 폴더 이름이 바뀌어요';
+}
+$('#docAdd').onclick=()=>$('#file').click();
+$('#docList').addEventListener('click',e=>{
+  const row=e.target.closest('.doc');if(!row)return;const i=+row.dataset.d;
+  const a=e.target.closest('[data-a]');
+  if(a){
+    if(a.dataset.a==='del'){removeDoc(i);return;}
+    const j=a.dataset.a==='up'?i-1:i+1;if(j<0||j>=docs.length)return;
+    saveCur();[docs[i],docs[j]]=[docs[j],docs[i]];
+    if(cur===i)cur=j;else if(cur===j)cur=i;
+    showFileInfo();renderDocs();updateSummary();return;
+  }
+  if(e.target.closest('input'))return;
+  if(i!==cur)activate(i);
+});
+function nameInput(el){
+  const v=cleanName(el.value);
+  if(v!==el.value.trim())toast('\\ / : * ? " < > | 는 폴더 이름에 쓸 수 없어 뺐어요');
+  el.value=v;return v;
+}
+$('#docList').addEventListener('change',e=>{
+  if(!e.target.classList.contains('dname'))return;
+  D(+e.target.closest('.doc').dataset.d).name=nameInput(e.target);renderDocs();updateSummary();
+});
+$('#rootName').addEventListener('change',e=>{nameInput(e.target);renderDocs();updateSummary();});
 $('#btnOpen').onclick=()=>$('#file').click();
-$('#file').onchange=e=>{loadFile(e.target.files[0]);e.target.value='';};
+$('#file').onchange=e=>{addFiles(e.target.files);e.target.value='';};
 window.addEventListener('dragover',e=>{e.preventDefault();$('#drop').classList.add('over');});
 window.addEventListener('dragleave',e=>{if(!e.relatedTarget)$('#drop').classList.remove('over');});
-window.addEventListener('drop',e=>{e.preventDefault();$('#drop').classList.remove('over');const f=e.dataTransfer&&e.dataTransfer.files[0];if(f)loadFile(f);});
-window.addEventListener('paste',e=>{const it=[...(e.clipboardData?e.clipboardData.items:[])].find(i=>i.type.startsWith('image/'));if(it)loadFile(it.getAsFile());});
+window.addEventListener('drop',e=>{e.preventDefault();$('#drop').classList.remove('over');const fs=e.dataTransfer&&e.dataTransfer.files;if(fs&&fs.length)addFiles(fs);});
+window.addEventListener('paste',e=>{const it=[...(e.clipboardData?e.clipboardData.items:[])].find(i=>i.type.startsWith('image/'));if(it)addFiles([it.getAsFile()]);});
 
 /* ---------- 줌 ---------- */
 function applyZoom(){const z=S.zoom;srcImg.style.imageRendering=z>2?'pixelated':'auto';stage.style.width=S.W*z+'px';stage.style.height=S.H*z+'px';$('#zVal').textContent=Math.round(z*100)+'%';layoutOverlay();}
@@ -695,7 +833,7 @@ segList.addEventListener('change',e=>{
   const i=+el.closest('.row').dataset.i,s=S.segs[i];
   snapshot();
   if(f==='y0'){const y=parseInt(el.value);if(!isNaN(y)){setCut(i,y);}}
-  else if(el.type==='checkbox'){s[f]=el.checked;}
+  else if(el.type==='checkbox'){s[f]=el.checked;if(f==='tab'&&el.checked&&MULTI())s.tabState=String(cur+1);}
   else{s[f]=el.value;if(f==='tabCount')s.tabX='';if(f==='tabX'&&s.tabX.trim())s.tabCount=tabEdges(s).length-1;}
   render();
 });
@@ -708,7 +846,7 @@ segList.addEventListener('click',e=>{
   S.sel=i;markSel();viewer.scrollTop=Math.max(0,S.segs[i].y0*S.zoom-60);
 });
 
-function render(){buildOverlay();renderList();renderErases();updateSummary();postState();}
+function render(){buildOverlay();renderList();renderErases();renderDocs();updateSummary();postState();}
 
 /* ---------- 자동 분할 ---------- */
 let edgeCache=null;
@@ -794,6 +932,12 @@ function computeOutputs(){
 }
 function updateSummary(){
   if(!S.img)return;
+  if(MULTI()){
+    const p=planMulti(),cn=computeOutputs().list.length;
+    $('#sum').textContent='시안 '+docs.length+'장 · 전체 저장 예상 '+p.count+'개 (.'+getExt()+') · 지금 시안 '+cn+'개 → '+p.root+'/'+docName(cur)+'/';
+    const w=$('#warns');w.innerHTML='';p.warns.forEach(t=>{const d=document.createElement('div');d.textContent='⚠ '+t;w.appendChild(d);});
+    return;
+  }
   const r=computeOutputs();
   const {x0,x1}=fr(),sk=S.segs.filter(s=>s.skip).length;
   $('#sum').textContent='출력 예상: '+r.list.length+'개 (.'+getExt()+') · 가로 '+(x1-x0)+'px'+(x0>0||x1<S.W?' (x '+x0+'–'+x1+')':'')+(sk?' · 저장 안 함 '+sk+'구간':'');
@@ -837,15 +981,70 @@ function zipStore(files){
 function closeModal(){$('#modal').hidden=true;previewUrls.forEach(u=>URL.revokeObjectURL(u));previewUrls=[];}
 $('#mClose').onclick=closeModal;
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
-let excluded=new Set();
 const okey=o=>o.x0+','+o.y0+','+o.x1+','+o.y1;
 /* 미리보기에서 ×로 뺀 이미지를 제외하고, img 번호는 남은 것끼리 다시 매깁니다 */
 function exportList(){
   const r=computeOutputs();let n=0;
-  const all=r.list.map(o=>{const off=excluded.has(okey(o));const name=(o.type!=='탭'&&!off)?'img_'+p2(++n):o.name;return {...o,name,off};});
+  const all=r.list.map(o=>{const off=S.excluded.has(okey(o));const name=(o.type!=='탭'&&!off)?'img_'+p2(++n):o.name;return {...o,name,off};});
   return {all,list:all.filter(o=>!o.off),warns:r.warns};
 }
+/* 여러 장 저장 계획: 탭 버튼은 맨 위 폴더에 한 번만(같은 이름은 먼저 나온 시안 것), 일반 이미지는 시안별 폴더 */
+function planMulti(){
+  const root=rootName(),warns=[],groups=[],tabItems=[],tabIdx=new Map(),names=new Map();
+  docs.forEach((_,d)=>{
+    const folder=docName(d);
+    if(names.has(folder))warns.push('폴더 이름 중복: '+folder+' ('+names.get(folder)+'번·'+(d+1)+'번 시안) — 시안 목록에서 이름을 바꿔 주세요');else names.set(folder,d+1);
+    inDoc(d,()=>{
+      if(S.fresh)warns.push((d+1)+'번 시안('+folder+')은 아직 열어 보지 않았어요 — 컷팅선 없이 통째로 저장돼요');
+      const r=computeOutputs();r.warns.forEach(w=>warns.push('['+folder+'] '+w));
+      const g={title:root+'/'+folder+'/',items:[]};let n=0;
+      r.list.forEach(o=>{
+        const k=okey(o),off=S.excluded.has(k);
+        if(o.type==='탭'){
+          const it={...o,d,k,off,path:o.name,from:folder};
+          if(!tabIdx.has(o.name)){tabIdx.set(o.name,tabItems.length);tabItems.push(it);}
+          else if(tabItems[tabIdx.get(o.name)].off&&!off)tabItems[tabIdx.get(o.name)]=it;
+        }else{const name=off?o.name:'img_'+p2(++n);g.items.push({...o,name,d,k,off,path:folder+'/'+name,from:folder});}
+      });
+      groups.push(g);
+    });
+  });
+  const nums=new Set(tabItems.map(o=>o.name.slice(4,6)));
+  nums.forEach(nn=>['on','off'].forEach(st=>{if(!tabIdx.has('tab_'+nn+'_'+st))warns.push('tab_'+nn+'_'+st+' 이미지가 없어요 — 이 탭이 '+st+'인 시안이 없어요 (탭 행 상태 확인)');}));
+  tabItems.sort((a,b)=>a.name.localeCompare(b.name));
+  const all=(tabItems.length?[{title:root+'/ (탭 버튼 · 공통)',items:tabItems}]:[]).concat(groups);
+  const count=all.reduce((s,g)=>s+g.items.filter(o=>!o.off).length,0);
+  return {root,groups:all,warns:[...new Set(warns)],count};
+}
+function gridItem(o,ext,dIdx){
+  const it=document.createElement('div');it.className='item'+(o.off?' off':'');
+  const x=document.createElement('button');x.className='ix';x.dataset.k=okey(o);if(dIdx!=null)x.dataset.d=dIdx;x.title=o.off?'다시 포함':'이 이미지 제외';x.textContent=o.off?'복원':'×';it.appendChild(x);
+  const tb=document.createElement('div');tb.className='tb';
+  const w=o.x1-o.x0,h=o.y1-o.y0,c=document.createElement('canvas'),sc=Math.min(1,140/w,110/h);
+  c.width=Math.max(1,Math.round(w*sc));c.height=Math.max(1,Math.round(h*sc));
+  c.getContext('2d').drawImage(src(),o.x0,o.y0,w,h,0,0,c.width,c.height);tb.appendChild(c);it.appendChild(tb);
+  const b=document.createElement('b');b.textContent=o.off?'제외됨':o.name+'.'+ext;
+  const sp=document.createElement('span');sp.textContent=w+'×'+h+'px · y '+o.y0+'–'+o.y1+(dIdx!=null&&o.type==='탭'?' · '+o.from+'에서':'');
+  it.appendChild(b);it.appendChild(sp);
+  if(!dl&&!o.off){const cv=cropCanvas(o);new Promise(res=>cv.toBlob(res,ext==='jpg'?'image/jpeg':'image/png',1)).then(bl=>{if(!bl)return;const u=URL.createObjectURL(bl);previewUrls.push(u);const im=document.createElement('img');im.src=u;im.alt=o.name;tb.replaceChildren(im);}).catch(()=>{});}
+  return it;
+}
+function renderGridMulti(){
+  const p=planMulti(),grid=$('#mGrid'),ext=getExt();
+  const total=p.groups.reduce((s,g)=>s+g.items.length,0);
+  $('#mTitle').textContent='결과 미리보기 · 시안 '+docs.length+'장 · '+p.count+'개 저장'+(total>p.count?' (제외 '+(total-p.count)+'개)':'')+' (.'+ext+')';
+  $('#mWarn').innerHTML='';p.warns.forEach(t=>{const d=document.createElement('div');d.textContent='⚠ '+t;$('#mWarn').appendChild(d);});
+  grid.innerHTML='';
+  p.groups.forEach(g=>{
+    const h=document.createElement('div');h.className='ghd';h.textContent=g.title;
+    const sp=document.createElement('span');sp.textContent=g.items.filter(o=>!o.off).length+'개';h.appendChild(sp);grid.appendChild(h);
+    g.items.forEach(o=>grid.appendChild(inDoc(o.d,()=>gridItem(o,ext,o.d))));
+  });
+  $('#mZip').disabled=!p.count;
+  $('#mDir').hidden=!CAN_DIR||!!dl;$('#mDir').disabled=!p.count;
+}
 function renderGrid(){
+  if(MULTI()){renderGridMulti();return;}
   const {all,list,warns}=exportList(),grid=$('#mGrid'),ext=getExt();
   $('#mTitle').textContent='결과 미리보기 · '+list.length+'개 저장'+(all.length>list.length?' (제외 '+(all.length-list.length)+'개)':'')+' (.'+ext+')';
   $('#mWarn').innerHTML='';warns.forEach(t=>{const d=document.createElement('div');d.textContent='⚠ '+t;$('#mWarn').appendChild(d);});
@@ -867,12 +1066,12 @@ function renderGrid(){
 }
 $('#mGrid').addEventListener('click',e=>{
   const x=e.target.closest('.ix');if(!x)return;
-  const k=x.dataset.k;if(excluded.has(k))excluded.delete(k);else excluded.add(k);
+  const k=x.dataset.k,ex=x.dataset.d!=null?D(+x.dataset.d).excluded:S.excluded;if(ex.has(k))ex.delete(k);else ex.add(k);
   $('#mStat').textContent='';renderGrid();
 });
 $('#btnPreview').onclick=()=>{
   if(!S.img)return;
-  if(!computeOutputs().list.length){toast('내보낼 이미지가 없어요');return;}
+  if(!(MULTI()?planMulti().count:computeOutputs().list.length)){toast('내보낼 이미지가 없어요');return;}
   $('#mStat').textContent='';renderGrid();$('#modal').hidden=false;
 };
 /* 폴더에 바로 저장: File System Access API (Chrome·Edge). 미지원 브라우저는 버튼을 숨기고 ZIP만 사용 */
@@ -886,19 +1085,34 @@ async function buildFiles(list,ext,stat){
   }
   return files;
 }
+/* 저장할 파일 목록: 이름은 맨 위 폴더 기준 상대 경로 (여러 장이면 tab1/img_01.jpg, tab_01_on.jpg 등) */
+function outCount(){return MULTI()?planMulti().count:exportList().list.length;}
+async function prepareFiles(stat){
+  const ext=getExt();
+  if(!MULTI())return {root:rootName(),files:await buildFiles(exportList().list,ext,stat)};
+  const p=planMulti(),items=p.groups.flatMap(g=>g.items).filter(o=>!o.off),files=[];
+  for(let k=0;k<items.length;k++){
+    stat.textContent='이미지 만드는 중… '+(k+1)+'/'+items.length;
+    const o=items[k],c=inDoc(o.d,()=>cropCanvas(o));
+    const bl=await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('이미지 인코딩 실패')),ext==='jpg'?'image/jpeg':'image/png',1));
+    files.push({name:o.path+'.'+ext,data:new Uint8Array(await bl.arrayBuffer())});
+  }
+  return {root:p.root,files};
+}
 $('#mDir').onclick=async()=>{
-  const btn=$('#mDir'),zbtn=$('#mZip'),r=exportList(),ext=getExt(),stat=$('#mStat');if(!r.list.length)return;
+  const btn=$('#mDir'),zbtn=$('#mZip'),stat=$('#mStat');if(!outCount())return;
   let root;
   try{root=await window.showDirectoryPicker({id:'image-cut',mode:'readwrite',startIn:'downloads'});}
   catch(err){if(err&&err.name==='AbortError'){stat.textContent='저장이 취소되었어요';return;}stat.textContent='폴더를 열 수 없어요: '+(err&&err.message?err.message:err)+' · ZIP 저장을 이용해 주세요';return;}
   btn.disabled=true;zbtn.disabled=true;
   try{
-    const files=await buildFiles(r.list,ext,stat);
-    const folder=S.base+'_cut';
+    const {root:folder,files}=await prepareFiles(stat);
     const dir=await root.getDirectoryHandle(folder,{create:true});
     for(let k=0;k<files.length;k++){
       stat.textContent='폴더에 쓰는 중… '+(k+1)+'/'+files.length;
-      const fh=await dir.getFileHandle(files[k].name,{create:true});
+      const parts=files[k].name.split('/');let d=dir;
+      for(let q=0;q<parts.length-1;q++)d=await d.getDirectoryHandle(parts[q],{create:true});
+      const fh=await d.getFileHandle(parts[parts.length-1],{create:true});
       const w=await fh.createWritable();await w.write(files[k].data);await w.close();
     }
     closeModal();toast('폴더에 저장했어요: '+root.name+'/'+folder+' ('+files.length+'개)');toParent({type:'cut:saved',filename:folder});
@@ -909,12 +1123,12 @@ $('#mDir').onclick=async()=>{
   finally{btn.disabled=false;zbtn.disabled=false;}
 };
 $('#mZip').onclick=async()=>{
-  const btn=$('#mZip'),r=exportList(),ext=getExt(),stat=$('#mStat');if(!r.list.length)return;
+  const btn=$('#mZip'),stat=$('#mStat');if(!outCount())return;
   btn.disabled=true;
   try{
-    const files=await buildFiles(r.list,ext,stat);
+    const {root,files}=await prepareFiles(stat);
     stat.textContent='ZIP 묶는 중…';
-    const zip=zipStore(files),filename=S.base+'_cut.zip';
+    const zip=zipStore(files),filename=root+'.zip';
     if(!dl){
       const u=URL.createObjectURL(zip),a=document.createElement('a');a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();
       setTimeout(()=>URL.revokeObjectURL(u),15000);
@@ -935,12 +1149,13 @@ $('#mZip').onclick=async()=>{
 /* ---------- 퍼블리싱 앱(iframe) 연동 ---------- */
 const EMBED=window.parent!==window;
 function toParent(msg){if(EMBED){try{window.parent.postMessage(msg,location.origin);}catch(e){}}}
-function postState(){toParent({type:'cut:state',dirty:S.segs.length>1||S.erases.length>0});}
+function postState(){toParent({type:'cut:state',dirty:docs.some((_,i)=>docDirty(D(i)))});}
 if(EMBED){
   const back=$('#btnBack');back.hidden=false;back.onclick=()=>toParent({type:'cut:exit'});
   window.addEventListener('message',e=>{
     if(e.origin!==location.origin||!e.data)return;
-    if(e.data.type==='cut:load-file'&&e.data.file)loadFile(e.data.file);
+    if(e.data.type==='cut:load-file'&&e.data.file)addFiles([e.data.file]);
+    if(e.data.type==='cut:load-files'&&e.data.files)addFiles(e.data.files);
   });
   toParent({type:'cut:ready'});
 }

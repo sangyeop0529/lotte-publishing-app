@@ -13,23 +13,28 @@ const tips = [
   "750px 밖은 자동으로 잘라냄",
   "코드 영역은 저장 안 함",
   "E = 지우개 (배경색으로 채움)",
+  "시안 여러 장 한 번에",
   "폴더 저장 · ZIP 저장",
 ];
 
 const ImageCut = () => {
-  const [file, setFile] = useState(null);
+  // 시안 여러 장(탭1·탭2·탭3)을 한 번에 넘길 수 있도록 배열로 관리
+  const [files, setFiles] = useState(null);
   const [isOver, setIsOver] = useState(false);
   const inputRef = useRef(null);
   const iframeRef = useRef(null);
   const dirtyRef = useRef(false);
 
-  const openWith = useCallback((f) => {
-    if (!f || !f.type.startsWith("image/")) {
+  const openWith = useCallback((list) => {
+    const images = [...(list || [])].filter(
+      (f) => f && f.type.startsWith("image/"),
+    );
+    if (!images.length) {
       alert("이미지 파일만 열 수 있어요.");
       return;
     }
     dirtyRef.current = false;
-    setFile(f);
+    setFiles(images);
   }, []);
 
   const close = useCallback(() => {
@@ -40,19 +45,19 @@ const ImageCut = () => {
       return;
     }
     dirtyRef.current = false;
-    setFile(null);
+    setFiles(null);
   }, []);
 
   // iframe과 메시지 주고받기
   useEffect(() => {
-    if (!file) return;
+    if (!files) return;
     const onMessage = (e) => {
       if (e.origin !== window.location.origin) return;
       if (e.source !== iframeRef.current?.contentWindow) return;
       const { type, dirty } = e.data || {};
       if (type === "cut:ready") {
         iframeRef.current.contentWindow.postMessage(
-          { type: "cut:load-file", file },
+          { type: "cut:load-files", files },
           window.location.origin,
         );
       } else if (type === "cut:state") {
@@ -77,25 +82,25 @@ const ImageCut = () => {
       window.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = prevOverflow;
     };
-  }, [file, close]);
+  }, [files, close]);
 
   // 탭 화면에서 Ctrl+V로 이미지 붙여넣기
   useEffect(() => {
-    if (file) return;
+    if (files) return;
     const onPaste = (e) => {
       const item = [...(e.clipboardData?.items || [])].find((i) =>
         i.type.startsWith("image/"),
       );
-      if (item) openWith(item.getAsFile());
+      if (item) openWith([item.getAsFile()]);
     };
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
-  }, [file, openWith]);
+  }, [files, openWith]);
 
   const onDrop = (e) => {
     e.preventDefault();
     setIsOver(false);
-    openWith(e.dataTransfer.files[0]);
+    openWith(e.dataTransfer.files);
   };
 
   return (
@@ -123,15 +128,16 @@ const ImageCut = () => {
             ⬆
           </span>
           <strong>이미지를 끌어다 놓거나 클릭해서 선택</strong>
-          <span className="drop-sub">Ctrl+V로 붙여넣기도 됩니다</span>
+          <span className="drop-sub">여러 장(탭1·탭2·탭3 시안)도 한 번에 · Ctrl+V로 붙여넣기도 됩니다</span>
         </button>
         <input
           ref={inputRef}
           type="file"
           accept="image/*"
+          multiple
           hidden
           onChange={(e) => {
-            openWith(e.target.files[0]);
+            openWith(e.target.files);
             e.target.value = "";
           }}
         />
@@ -143,7 +149,7 @@ const ImageCut = () => {
         </ul>
       </div>
 
-      {file && (
+      {files && (
         <div
           className="image-cut-overlay"
           role="dialog"
