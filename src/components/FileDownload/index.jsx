@@ -35,27 +35,6 @@ const templates = [
     // tags: ["모달"],
     // size: "506KB",
   },
-  {
-    title: "오디오",
-    file: "5. audio",
-    // desc: "재생바가 있는 오디오 2개",
-    // tags: ["오디오"],
-    // size: "143KB",
-  },
-  // {
-  //   title: "서브탭",
-  //   file: "7. sub_tab",
-  //   desc: "탭 안에 하위 탭이 있는 구조",
-  //   tags: ["탭", "서브탭"],
-  //   size: "502KB",
-  // },
-  // {
-  //   title: "고정BG",
-  //   file: "8. fixedBackgroundImage",
-  //   desc: "스크롤해도 배경 이미지가 고정",
-  //   tags: ["배경 고정"],
-  //   size: "2.3MB",
-  // },
 ];
 
 // 오늘 날짜 YYMMDD (예: 2026-11-10 → 261110)
